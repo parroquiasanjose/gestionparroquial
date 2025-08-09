@@ -108,9 +108,9 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         <div id="notification-badge" class="hidden"></div>
                     </button>
-                    <div id="reminders-panel" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-700 rounded-lg shadow-xl p-4 origin-top-right">
-                        <h4 class="font-bold text-md mb-2">Próximas Colectas</h4>
-                        <ul id="reminders-list" class="space-y-2 text-sm">
+                    <div id="reminders-panel" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-700 rounded-lg shadow-xl p-4 origin-top-right">
+                        <h4 class="font-bold text-md mb-2">Próximos Recordatorios</h4>
+                        <ul id="reminders-list" class="space-y-2 text-sm max-h-64 overflow-y-auto">
                            <!-- Reminders will be injected here -->
                         </ul>
                     </div>
@@ -159,6 +159,7 @@
                         <button id="envios-colectas-btn" class="card-hover-effect btn-gradient bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-xl shadow-lg text-center">Fecha de Envíos de Colectas</button>
                         <button id="aportes-btn" class="card-hover-effect btn-gradient bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-4 rounded-xl shadow-lg text-center">Sueldos y Aportes</button>
                         <button id="manage-categories-btn" class="card-hover-effect btn-gradient bg-gradient-to-r from-slate-500 to-slate-600 text-white p-4 rounded-xl shadow-lg text-center">Gestionar Categorías</button>
+                        <button id="manage-reminders-btn" class="card-hover-effect btn-gradient bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-xl shadow-lg text-center">Gestionar Recordatorios</button>
                     </div>
                 </div>
             </div>
@@ -388,6 +389,32 @@
             <button id="back-from-categories-btn" class="mt-12 w-full max-w-xs mx-auto block btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
         </section>
 
+        <!-- REMINDERS MANAGEMENT VIEW -->
+        <section id="reminders-management-view" class="view-container hidden max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 class="text-3xl font-bold mb-6 text-center">Gestión de Recordatorios</h2>
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl mb-8">
+                <h3 class="text-xl font-bold mb-4">Nuevo Recordatorio</h3>
+                <form id="new-reminder-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-1">
+                        <label for="reminder-title" class="block text-sm font-medium">Título</label>
+                        <input type="text" id="reminder-title" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                    </div>
+                    <div>
+                        <label for="reminder-date" class="block text-sm font-medium">Fecha</label>
+                        <input type="date" id="reminder-date" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                    </div>
+                    <button type="submit" class="w-full btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 rounded-xl shadow-lg hover:from-green-600 hover:to-green-700">Guardar</button>
+                </form>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Recordatorios Programados</h3>
+                <div id="reminders-list-container" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Reminder list will be injected here -->
+                </div>
+            </div>
+            <button id="back-from-reminders-btn" class="mt-8 w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+        </section>
+
         <!-- BALANCE VIEW -->
         <section id="balance-view" class="view-container hidden max-w-7xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
             <h2 id="balance-title" class="text-3xl font-bold mb-2 text-center">Balance de la Parroquia San José</h2>
@@ -522,6 +549,27 @@
             </form>
         </div>
     </div>
+    <!-- MODAL PARA EDITAR RECORDATORIO -->
+    <div id="edit-reminder-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-auto">
+            <h3 class="text-2xl font-bold mb-6 text-center">Editar Recordatorio</h3>
+            <form id="edit-reminder-form" class="space-y-4">
+                <input type="hidden" id="edit-reminder-id">
+                <div>
+                    <label for="edit-reminder-title" class="block text-sm font-medium">Título</label>
+                    <input type="text" id="edit-reminder-title" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                </div>
+                <div>
+                    <label for="edit-reminder-date" class="block text-sm font-medium">Fecha</label>
+                    <input type="date" id="edit-reminder-date" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="edit-reminder-cancel-btn" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                    <button type="button" id="edit-reminder-save-btn" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- LOGIC -->
     <script type="module">
@@ -542,6 +590,7 @@
                 generalTransactions: [],
                 bancoTransactions: [],
                 envioColectas: [],
+                reminders: [],
                 categories: {
                     general: { ingreso: [], egreso: [] },
                     banco: { ingreso: [], egreso: [] }
@@ -581,6 +630,7 @@
                     aportesView: document.getElementById('aportes-view'),
                     balanceView: document.getElementById('balance-view'),
                     categoryManagementView: document.getElementById('category-management-view'),
+                    remindersManagementView: document.getElementById('reminders-management-view'),
                     aportesContainer: document.getElementById('aportes-container'),
                     envioColectasList: document.getElementById('envio-colectas-list'),
                     envioSubtotal: document.getElementById('envio-subtotal'),
@@ -588,6 +638,7 @@
                     aportesBtn: document.getElementById('aportes-btn'),
                     balanceBtn: document.getElementById('balance-btn'),
                     manageCategoriesBtn: document.getElementById('manage-categories-btn'),
+                    manageRemindersBtn: document.getElementById('manage-reminders-btn'),
                     backToPanelBtn: document.getElementById('back-to-panel-btn'),
                     backFromEnviosBtn: document.getElementById('back-from-envios-btn'),
                     backFromAportesBtn: document.getElementById('back-from-aportes-btn'),
@@ -596,6 +647,7 @@
                     backFromDatePromptBtn: document.getElementById('back-from-date-prompt-btn'),
                     backFromEditDayBtn: document.getElementById('back-from-edit-day-btn'),
                     backFromCategoriesBtn: document.getElementById('back-from-categories-btn'),
+                    backFromRemindersBtn: document.getElementById('back-from-reminders-btn'),
                     datePromptTitle: document.getElementById('date-prompt-title'),
                     entryDateInput: document.getElementById('entry-date-input'),
                     continueToFormBtn: document.getElementById('continue-to-form-btn'),
@@ -651,6 +703,11 @@
                     categoryGeneralEgresoContainer: document.getElementById('category-general-egreso-container'),
                     categoryBancoIngresoContainer: document.getElementById('category-banco-ingreso-container'),
                     categoryBancoEgresoContainer: document.getElementById('category-banco-egreso-container'),
+                    // Reminders Management
+                    newReminderForm: document.getElementById('new-reminder-form'),
+                    reminderTitle: document.getElementById('reminder-title'),
+                    reminderDate: document.getElementById('reminder-date'),
+                    remindersListContainer: document.getElementById('reminders-list-container'),
                     // Modals
                     saveConfirmModal: document.getElementById('save-confirm-modal'),
                     saveConfirmText: document.getElementById('save-confirm-text'),
@@ -693,6 +750,14 @@
                     editTransactionMonto: document.getElementById('edit-transaction-monto'),
                     editTransactionSaveBtn: document.getElementById('edit-transaction-save-btn'),
                     editTransactionCancelBtn: document.getElementById('edit-transaction-cancel-btn'),
+                    // Edit Reminder Modal
+                    editReminderModal: document.getElementById('edit-reminder-modal'),
+                    editReminderForm: document.getElementById('edit-reminder-form'),
+                    editReminderId: document.getElementById('edit-reminder-id'),
+                    editReminderTitle: document.getElementById('edit-reminder-title'),
+                    editReminderDate: document.getElementById('edit-reminder-date'),
+                    editReminderSaveBtn: document.getElementById('edit-reminder-save-btn'),
+                    editReminderCancelBtn: document.getElementById('edit-reminder-cancel-btn'),
                     // Connection Status
                     connectionStatus: document.getElementById('connection-status'),
                     connectionStatusText: document.getElementById('connection-status-text'),
@@ -711,12 +776,12 @@
                 const firebaseConfig = typeof __firebase_config !== 'undefined' 
                     ? JSON.parse(__firebase_config)
                     : {
-                        apiKey: "AIzaSyCCpr9FqklSBzkedKGQyNQrTLB30Y-AhJI",
-                        authDomain: "gestionparroquial-2fabc.firebaseapp.com",
-                        projectId: "gestionparroquial-2fabc",
-                        storageBucket: "gestionparroquial-2fabc.appspot.com",
-                        messagingSenderId: "710289559218",
-                        appId: "1:710289559218:web:26bf19a750914deb3a83ab"
+                        apiKey: "YOUR_API_KEY", // Replace with your actual config
+                        authDomain: "YOUR_AUTH_DOMAIN",
+                        projectId: "YOUR_PROJECT_ID",
+                        storageBucket: "YOUR_STORAGE_BUCKET",
+                        messagingSenderId: "YOUR_SENDER_ID",
+                        appId: "YOUR_APP_ID"
                       };
 
                 try {
@@ -741,6 +806,7 @@
                          console.error("Error initializing Firebase:", error);
                          this.showToast("Error al conectar con la base de datos.", "error");
                     }
+                    // Fallback to online-only mode
                     const app = initializeApp(firebaseConfig);
                     this.state.db = getFirestore(app);
                     this.state.auth = getAuth(app);
@@ -753,12 +819,14 @@
                 const auth = this.state.auth;
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        if (!this.state.userId) {
+                        // User is signed in.
+                        if (!this.state.userId) { // Check to prevent re-running on token refresh
                             this.state.userId = user.uid;
                             console.log("User authenticated with UID:", this.state.userId);
                             this.loadInitialData();
                         }
                     } else {
+                        // User is signed out. Attempt to sign in.
                         (async () => {
                             try {
                                 if (token) {
@@ -784,7 +852,8 @@
                         this.checkAndSeedCategories(),
                         this.loadAllTransactions(),
                         this.checkAndSeedEnvioColectas(),
-                        this.checkAndSeedAportesData()
+                        this.checkAndSeedAportesData(),
+                        this.loadReminders()
                     ]);
                     this.updateReminders();
                 } catch(error) {
@@ -829,6 +898,7 @@
                 this.dom.aportesBtn.addEventListener('click', () => this.showAportesView());
                 this.dom.balanceBtn.addEventListener('click', () => this.showBalanceView());
                 this.dom.manageCategoriesBtn.addEventListener('click', () => this.showCategoryManagementView());
+                this.dom.manageRemindersBtn.addEventListener('click', () => this.showRemindersManagementView());
                 this.dom.backFromEnviosBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromAportesBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromBalanceBtn.addEventListener('click', () => this.showMainView());
@@ -836,6 +906,7 @@
                 this.dom.backFromDatePromptBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromEditDayBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromCategoriesBtn.addEventListener('click', () => this.showMainView());
+                this.dom.backFromRemindersBtn.addEventListener('click', () => this.showMainView());
                 this.dom.downloadRangePdfBtn.addEventListener('click', () => this.downloadDateRangePDF());
                 this.dom.searchRangeBtn.addEventListener('click', () => this.showDateRangeResults());
                 this.dom.continueToFormBtn.addEventListener('click', () => this.handleDatePromptContinue());
@@ -932,6 +1003,24 @@
                         this.dom.remindersPanel.classList.add('hidden');
                     }
                 });
+
+                // Reminders Management
+                this.dom.newReminderForm.addEventListener('submit', e => {
+                    e.preventDefault();
+                    this.handleAddReminder();
+                });
+                this.dom.remindersListContainer.addEventListener('click', e => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    const { action, id } = button.dataset;
+                    if (action === 'edit-reminder') {
+                        this.showEditReminderModal(id);
+                    } else if (action === 'delete-reminder') {
+                        this.handleDeleteReminder(id);
+                    }
+                });
+                this.dom.editReminderSaveBtn.addEventListener('click', () => this.handleUpdateReminder());
+                this.dom.editReminderCancelBtn.addEventListener('click', () => this.dom.editReminderModal.classList.add('hidden'));
             },
 
             // --- DATA HANDLING & FIRESTORE ---
@@ -1531,6 +1620,8 @@
                     this.deleteSingleTransaction(data.id, data.block);
                 } else if (type === 'delete-category') {
                     this.deleteCategory(data.id);
+                } else if (type === 'delete-reminder') {
+                    this.deleteReminder(data.id);
                 }
                 this.dom.confirmModal.classList.add('hidden');
                 this.state.pendingAction = null;
@@ -2139,36 +2230,156 @@
                 }
             },
 
-             // --- REMINDERS ---
-            updateReminders() {
-                const reminders = this.getUpcomingColectas();
-                this.dom.notificationBadge.classList.toggle('hidden', reminders.length === 0);
-                
-                if (reminders.length > 0) {
-                    this.dom.remindersList.innerHTML = reminders.map(r => `
-                        <li>
-                            <p class="font-semibold">${r.descripcion}</p>
-                            <p class="text-slate-500 dark:text-slate-400">${r.fecha} (${r.daysAway === 0 ? 'Hoy' : `en ${r.daysAway} día(s)`})</p>
-                        </li>
-                    `).join('');
-                } else {
-                    this.dom.remindersList.innerHTML = '<li><p class="text-slate-500 dark:text-slate-400">No hay colectas próximas.</p></li>';
+             // --- REMINDERS MANAGEMENT ---
+            showRemindersManagementView() {
+                this.switchView('reminders-management-view');
+                this.renderRemindersList();
+            },
+
+            async loadReminders() {
+                const collRef = this.getCollectionRef("recordatorios");
+                if (!collRef) return;
+                const snapshot = await getDocs(collRef);
+                this.state.reminders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            },
+
+            renderRemindersList() {
+                const container = this.dom.remindersListContainer;
+                container.innerHTML = '';
+                if (this.state.reminders.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500">No hay recordatorios personalizados.</p>';
+                    return;
+                }
+                const sortedReminders = [...this.state.reminders].sort((a,b) => a.fecha.localeCompare(b.fecha));
+
+                sortedReminders.forEach(reminder => {
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center p-3 bg-gray-100 dark:bg-slate-700 rounded-lg';
+                    item.innerHTML = `
+                        <div>
+                            <p class="font-bold">${reminder.titulo}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${this.formatDate(reminder.fecha)}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-action="edit-reminder" data-id="${reminder.id}" class="text-xs btn-gradient bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-3 py-1 rounded-md">Editar</button>
+                            <button data-action="delete-reminder" data-id="${reminder.id}" class="text-xs btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white px-3 py-1 rounded-md">Eliminar</button>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            },
+
+            async handleAddReminder() {
+                const title = this.dom.reminderTitle.value.trim();
+                const date = this.dom.reminderDate.value;
+                if (!title || !date) {
+                    this.showToast("El título y la fecha son obligatorios.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const collRef = this.getCollectionRef("recordatorios");
+                    await addDoc(collRef, { titulo: title, fecha: date });
+                    this.dom.newReminderForm.reset();
+                    this.showToast("Recordatorio añadido.", "success");
+                    await this.loadReminders();
+                    this.renderRemindersList();
+                    this.updateReminders();
+                } catch (error) {
+                    console.error("Error adding reminder:", error);
+                    this.showToast("No se pudo añadir el recordatorio.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            
+            showEditReminderModal(id) {
+                const reminder = this.state.reminders.find(r => r.id === id);
+                if (!reminder) return;
+                this.dom.editReminderId.value = id;
+                this.dom.editReminderTitle.value = reminder.titulo;
+                this.dom.editReminderDate.value = reminder.fecha;
+                this.dom.editReminderModal.classList.remove('hidden');
+            },
+
+            async handleUpdateReminder() {
+                const id = this.dom.editReminderId.value;
+                const titulo = this.dom.editReminderTitle.value.trim();
+                const fecha = this.dom.editReminderDate.value;
+                if (!titulo || !fecha) {
+                    this.showToast("El título y la fecha no pueden estar vacíos.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("recordatorios"), id);
+                    await updateDoc(docRef, { titulo, fecha });
+                    this.dom.editReminderModal.classList.add('hidden');
+                    this.showToast("Recordatorio actualizado.", "success");
+                    await this.loadReminders();
+                    this.renderRemindersList();
+                    this.updateReminders();
+                } catch (error) {
+                    console.error("Error updating reminder:", error);
+                    this.showToast("No se pudo actualizar.", "error");
+                } finally {
+                    this.toggleLoader(false);
                 }
             },
 
-            getUpcomingColectas() {
+            handleDeleteReminder(id) {
+                this.state.pendingAction = { type: 'delete-reminder', data: { id } };
+                this.dom.confirmModalTitle.textContent = "Confirmar Eliminación";
+                this.dom.confirmModalText.textContent = `¿Seguro que quieres eliminar este recordatorio?`;
+                this.dom.confirmModal.classList.remove('hidden');
+            },
+
+            async deleteReminder(id) {
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("recordatorios"), id);
+                    await deleteDoc(docRef);
+                    this.showToast("Recordatorio eliminado.", "success");
+                    await this.loadReminders();
+                    this.renderRemindersList();
+                    this.updateReminders();
+                } catch (error) {
+                    console.error("Error deleting reminder:", error);
+                    this.showToast("No se pudo eliminar.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+
+             // --- NOTIFICATIONS ---
+            updateReminders() {
+                const notifications = this.getUpcomingNotifications();
+                this.dom.notificationBadge.classList.toggle('hidden', notifications.length === 0);
+                
+                if (notifications.length > 0) {
+                    this.dom.remindersList.innerHTML = notifications.map(n => `
+                        <li class="border-b border-gray-200 dark:border-slate-600 pb-2">
+                            <p class="font-semibold">${n.title}</p>
+                            <p class="text-slate-500 dark:text-slate-400">${n.dateText} (${n.daysAway === 0 ? 'Hoy' : `en ${n.daysAway} día(s)`})</p>
+                        </li>
+                    `).join('');
+                } else {
+                    this.dom.remindersList.innerHTML = '<li><p class="text-slate-500 dark:text-slate-400">No hay recordatorios próximos.</p></li>';
+                }
+            },
+
+            getUpcomingNotifications() {
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Normalize to start of day
+                today.setHours(0, 0, 0, 0);
                 const upcoming = [];
                 const reminderDays = 15;
-
                 const monthMap = { "ENERO": 0, "FEBRERO": 1, "MARZO": 2, "ABRIL": 3, "MAYO": 4, "JUNIO": 5, "JULIO": 6, "AGOSTO": 7, "SEPTIEMBRE": 8, "OCTUBRE": 9, "NOVIEMBRE": 10, "DICIEMBRE": 11 };
 
+                // Process static collections
                 this.state.envioColectas.forEach(colecta => {
                     const dateString = colecta.fecha.toUpperCase();
-                    // Simple parser for formats like "4-5 ENERO" or "18 abril"
                     const parts = dateString.split(' ');
-                    const dayPart = parts[0].split('-')[0]; // Take the first day in a range
+                    const dayPart = parts[0].split('-')[0];
                     const monthPart = parts[parts.length - 1];
                     
                     if (dayPart && monthMap[monthPart] !== undefined) {
@@ -2181,10 +2392,23 @@
                         const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
                         if (daysAway >= 0 && daysAway <= reminderDays) {
-                            upcoming.push({ ...colecta, daysAway });
+                            upcoming.push({ title: `Colecta: ${colecta.descripcion}`, dateText: colecta.fecha, daysAway });
                         }
                     }
                 });
+
+                // Process dynamic reminders
+                this.state.reminders.forEach(reminder => {
+                    const [year, month, day] = reminder.fecha.split('-').map(Number);
+                    const reminderDate = new Date(year, month - 1, day);
+                    const timeDiff = reminderDate.getTime() - today.getTime();
+                    const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                    if (daysAway >= 0 && daysAway <= reminderDays) {
+                        upcoming.push({ title: reminder.titulo, dateText: this.formatDate(reminder.fecha), daysAway });
+                    }
+                });
+
                 return upcoming.sort((a,b) => a.daysAway - b.daysAway);
             },
         };
