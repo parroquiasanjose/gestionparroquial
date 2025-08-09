@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Parroquial - San José</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card-hover-effect { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+        .card-hover-effect:hover { transform: translateY(-5px); }
+        .hidden { display: none; }
+        .btn-gradient {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards;
+        }
+        .toast.success { background-color: #28a745; }
+        .toast.error { background-color: #dc3545; }
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        /* Loading Spinner */
+        #loader {
+            background: rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loader" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500"></div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- NAVIGATION MENU -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Gestión Parroquial</h1>
+            <a href="./index.html" class="btn-gradient bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">Volver al Panel</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+
+        <!-- MAIN VIEW -->
+        <main id="main-view">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- General Income and Expenses Block -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex flex-col">
+                    <img src="https://placehold.co/100x100/E9D5FF/6D28D9?text=⛪" alt="Parish Icon" class="mx-auto mb-4 rounded-full">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Ingresos y Egresos Generales</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <button data-action="prompt-date" data-type="ingreso" data-block="general" class="card-hover-effect btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Ingreso</button>
+                        <button data-action="prompt-date" data-type="egreso" data-block="general" class="card-hover-effect btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Egreso</button>
+                    </div>
+                     <div class="mb-4">
+                        <input type="text" id="search-general-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                    </div>
+                    <div id="history-general-container" class="space-y-4 max-h-96 overflow-y-auto flex-grow"></div>
+                </div>
+
+                <!-- Bank Block -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex flex-col">
+                    <img src="https://placehold.co/100x100/BAE6FD/0284C7?text=🏦" alt="Bank Icon" class="mx-auto mb-4 rounded-full">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Banco</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <button data-action="prompt-date" data-type="ingreso" data-block="banco" class="card-hover-effect btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Ingreso</button>
+                        <button data-action="prompt-date" data-type="egreso" data-block="banco" class="card-hover-effect btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Egreso</button>
+                    </div>
+                     <div class="mb-4">
+                        <input type="text" id="search-banco-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                    </div>
+                    <div id="history-banco-container" class="space-y-4 max-h-96 overflow-y-auto flex-grow"></div>
+                </div>
+
+                <!-- Information Block -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex flex-col">
+                    <img src="https://placehold.co/100x100/A7F3D0/047857?text=ℹ️" alt="Information Icon" class="mx-auto mb-4 rounded-full">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Información</h2>
+                    <div class="flex flex-col gap-4 mb-6 flex-grow justify-center">
+                        <button id="envios-colectas-btn" class="card-hover-effect btn-gradient bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-xl shadow-lg text-center">Fecha de Envíos de Colectas</button>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold mb-4">Descargar Reporte por Rango</h3>
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <input type="date" id="start-date-filter" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                    <input type="date" id="end-date-filter" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                    <button id="download-range-pdf-btn" class="w-full md:w-auto btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:from-red-700 hover:to-red-800">Descargar PDF</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- FORM VIEW -->
+        <section id="form-view" class="hidden max-w-2xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 id="form-title" class="text-3xl font-bold mb-6 text-center"></h2>
+            <form id="transaction-form" class="space-y-4">
+                <input type="hidden" id="transaction-type">
+                <input type="hidden" id="transaction-id">
+                <input type="hidden" id="transaction-block">
+                <div>
+                    <label for="fecha" class="block text-sm font-medium">Fecha</label>
+                    <input type="date" id="fecha" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700" readonly>
+                </div>
+                <div>
+                    <label for="categoria" class="block text-sm font-medium">Categoría</label>
+                    <select id="categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700"></select>
+                </div>
+                <div>
+                    <label for="descripcion" class="block text-sm font-medium">Descripción (Característica)</label>
+                    <textarea id="descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700"></textarea>
+                </div>
+                <div>
+                    <label for="monto" class="block text-sm font-medium">Monto</label>
+                    <input type="number" id="monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                </div>
+                <div class="pt-4 space-y-2">
+                    <button type="button" id="save-and-new-btn" class="w-full btn-gradient bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-800">Confirmar y Cargar Otro</button>
+                    <button type="button" id="save-and-close-btn" class="w-full btn-gradient bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-green-600 hover:to-green-800">Confirmar y Guardar</button>
+                    <button type="button" id="back-btn" class="w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+                </div>
+            </form>
+        </section>
+        
+        <!-- COLLECTIONS VIEW -->
+        <section id="envio-colectas-view" class="hidden max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 class="text-3xl font-bold mb-6 text-center">Fechas de Envío de Colectas</h2>
+            <div id="envio-colectas-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"></div>
+            <div class="mt-6 pt-4 border-t border-gray-300 dark:border-slate-600">
+                <p class="text-xl font-bold text-right">Subtotal Enviado: <span id="envio-subtotal" class="text-green-500"></span></p>
+            </div>
+             <button id="back-from-envios-btn" class="mt-6 w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div id="date-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
+            <h3 class="text-xl font-bold mb-4">Confirmar Fecha</h3>
+            <div class="mb-6">
+                <label for="date-input-modal" class="block text-sm font-medium mb-2">Fecha de la operación</label>
+                <input type="date" id="date-input-modal" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+            </div>
+            <div class="flex justify-center gap-4">
+                <button id="date-modal-ok" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button>
+                <button id="date-modal-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <div id="summary-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
+            <h3 class="text-xl font-bold mb-4">Confirmar Operación</h3>
+            <p class="mb-6">¿Estás seguro de que quieres guardar toda la operación?</p>
+            <div id="summary-details" class="text-left mb-6 p-4 bg-gray-100 dark:bg-slate-700 rounded-lg"></div>
+            <div class="flex justify-center gap-4">
+                <button id="summary-modal-ok" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button>
+                <button id="summary-modal-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Volver</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
+            <h3 id="confirm-modal-title" class="text-xl font-bold mb-4"></h3>
+            <p id="confirm-modal-text" class="mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-modal-ok" class="btn-gradient bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button>
+                <button id="confirm-modal-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL PARA EDITAR COLECTA -->
+    <div id="edit-colecta-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-auto">
+            <h3 class="text-2xl font-bold mb-6 text-center">Editar Envío de Colecta</h3>
+            <form id="edit-colecta-form" class="space-y-4">
+                <input type="hidden" id="edit-colecta-id">
+                <div>
+                    <label for="edit-colecta-descripcion" class="block text-sm font-medium">Descripción</label>
+                    <input type="text" id="edit-colecta-descripcion" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                </div>
+                <div>
+                    <label for="edit-colecta-monto" class="block text-sm font-medium">Monto</label>
+                    <input type="number" id="edit-colecta-monto" min="0" step="0.01" placeholder="Dejar en blanco si no aplica" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="edit-colecta-cancel-btn" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                    <button type="button" id="edit-colecta-save-btn" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Main App Object
+        const App = {
+            // --- STATE ---
+            state: {
+                db: null,
+                auth: null,
+                userId: null,
+                generalTransactions: [],
+                bancoTransactions: [],
+                envioColectas: [],
+                currentTransactions: [], // For batch adding/editing
+                editingId: null,
+                pendingAction: null, // For modals
+                isLoading: true,
+            },
+
+            // --- DOM ELEMENTS ---
+            dom: {},
+
+            // --- INITIALIZATION ---
+            init() {
+                this.cacheDom();
+                this.bindEvents();
+                this.initFirebase();
+            },
+
+            cacheDom() {
+                this.dom = {
+                    loader: document.getElementById('loader'),
+                    toastContainer: document.getElementById('toast-container'),
+                    mainView: document.getElementById('main-view'),
+                    formView: document.getElementById('form-view'),
+                    envioColectasView: document.getElementById('envio-colectas-view'),
+                    envioColectasList: document.getElementById('envio-colectas-list'),
+                    envioSubtotal: document.getElementById('envio-subtotal'),
+                    enviosColectasBtn: document.getElementById('envios-colectas-btn'),
+                    backFromEnviosBtn: document.getElementById('back-from-envios-btn'),
+                    formTitle: document.getElementById('form-title'),
+                    transactionForm: document.getElementById('transaction-form'),
+                    transactionType: document.getElementById('transaction-type'),
+                    transactionId: document.getElementById('transaction-id'),
+                    transactionBlock: document.getElementById('transaction-block'),
+                    fecha: document.getElementById('fecha'),
+                    categoria: document.getElementById('categoria'),
+                    descripcion: document.getElementById('descripcion'),
+                    monto: document.getElementById('monto'),
+                    saveAndNewBtn: document.getElementById('save-and-new-btn'),
+                    saveAndCloseBtn: document.getElementById('save-and-close-btn'),
+                    backBtn: document.getElementById('back-btn'),
+                    historyGeneralContainer: document.getElementById('history-general-container'),
+                    historyBancoContainer: document.getElementById('history-banco-container'),
+                    searchGeneralInput: document.getElementById('search-general-input'),
+                    searchBancoInput: document.getElementById('search-banco-input'),
+                    startDateFilter: document.getElementById('start-date-filter'),
+                    endDateFilter: document.getElementById('end-date-filter'),
+                    downloadRangePdfBtn: document.getElementById('download-range-pdf-btn'),
+                    // Modals
+                    dateModal: document.getElementById('date-modal'),
+                    dateInputModal: document.getElementById('date-input-modal'),
+                    dateModalOk: document.getElementById('date-modal-ok'),
+                    dateModalCancel: document.getElementById('date-modal-cancel'),
+                    summaryModal: document.getElementById('summary-modal'),
+                    summaryModalOk: document.getElementById('summary-modal-ok'),
+                    summaryModalCancel: document.getElementById('summary-modal-cancel'),
+                    summaryDetails: document.getElementById('summary-details'),
+                    confirmModal: document.getElementById('confirm-modal'),
+                    confirmModalTitle: document.getElementById('confirm-modal-title'),
+                    confirmModalText: document.getElementById('confirm-modal-text'),
+                    confirmModalOk: document.getElementById('confirm-modal-ok'),
+                    confirmModalCancel: document.getElementById('confirm-modal-cancel'),
+                    // Edit Colecta Modal
+                    editColectaModal: document.getElementById('edit-colecta-modal'),
+                    editColectaForm: document.getElementById('edit-colecta-form'),
+                    editColectaId: document.getElementById('edit-colecta-id'),
+                    editColectaDescripcion: document.getElementById('edit-colecta-descripcion'),
+                    editColectaMonto: document.getElementById('edit-colecta-monto'),
+                    editColectaSaveBtn: document.getElementById('edit-colecta-save-btn'),
+                    editColectaCancelBtn: document.getElementById('edit-colecta-cancel-btn'),
+                };
+            },
+
+            // --- FIREBASE SETUP ---
+            initFirebase() {
+                this.toggleLoader(true);
+                // These variables are expected to be provided by the environment.
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (!firebaseConfig) {
+                    console.error("Firebase config is not available.");
+                    this.showToast("Error de configuración. La aplicación no puede iniciarse.", "error");
+                    this.toggleLoader(false);
+                    return;
+                }
+
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    this.state.db = getFirestore(app);
+                    this.state.auth = getAuth(app);
+                    this.handleAuthentication(initialAuthToken);
+                } catch (error) {
+                    console.error("Error initializing Firebase:", error);
+                    this.showToast("Error al conectar con la base de datos.", "error");
+                    this.toggleLoader(false);
+                }
+            },
+
+            handleAuthentication(token) {
+                onAuthStateChanged(this.state.auth, async (user) => {
+                    if (user) {
+                        this.state.userId = user.uid;
+                        console.log("User authenticated with UID:", this.state.userId);
+                        await this.loadInitialData();
+                    } else if (token) {
+                        try {
+                            await signInWithCustomToken(this.state.auth, token);
+                            // The onAuthStateChanged listener will handle the successful sign-in.
+                        } catch (error) {
+                            console.error("Error signing in with custom token:", error);
+                            this.showToast("Error de autenticación.", "error");
+                            this.toggleLoader(false);
+                        }
+                    } else {
+                        try {
+                            console.log("No user or token, signing in anonymously.");
+                            await signInAnonymously(this.state.auth);
+                             // The onAuthStateChanged listener will handle the successful sign-in.
+                        } catch (error) {
+                            console.error("Error signing in anonymously:", error);
+                            this.showToast("Error de autenticación anónima.", "error");
+                            this.toggleLoader(false);
+                        }
+                    }
+                });
+            },
+            
+            async loadInitialData() {
+                if (!this.state.userId) return;
+                this.toggleLoader(true);
+                try {
+                    await Promise.all([
+                        this.loadAllTransactions(),
+                        this.checkAndSeedEnvioColectas()
+                    ]);
+                } catch(error) {
+                    console.error("Error loading initial data:", error);
+                    this.showToast("No se pudieron cargar los datos.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+
+            // --- EVENT BINDING ---
+            bindEvents() {
+                // Main view actions using event delegation
+                this.dom.mainView.addEventListener('click', (e) => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    
+                    const { action, type, block, date } = button.dataset;
+
+                    if (action === 'prompt-date') {
+                        this.promptForDate(type, block);
+                    } else if (action === 'edit-date') {
+                        this.editDate(date, block);
+                    } else if (action === 'delete-date') {
+                        this.confirmDeleteDate(date, block);
+                    }
+                });
+                
+                // Other buttons
+                this.dom.enviosColectasBtn.addEventListener('click', () => this.showEnvioColectasView());
+                this.dom.backFromEnviosBtn.addEventListener('click', () => this.showMainView());
+                this.dom.downloadRangePdfBtn.addEventListener('click', () => this.downloadDateRangePDF());
+
+                // Form buttons
+                this.dom.backBtn.addEventListener('click', () => this.showMainView());
+                this.dom.saveAndNewBtn.addEventListener('click', () => this.handleSave(true));
+                this.dom.saveAndCloseBtn.addEventListener('click', () => this.handleSave(false));
+
+                // Search inputs
+                this.dom.searchGeneralInput.addEventListener('input', () => this.renderHistory('general'));
+                this.dom.searchBancoInput.addEventListener('input', () => this.renderHistory('banco'));
+
+                // Modals
+                this.dom.dateModalOk.addEventListener('click', () => this.handleDateConfirm());
+                this.dom.dateModalCancel.addEventListener('click', () => this.dom.dateModal.classList.add('hidden'));
+                this.dom.summaryModalOk.addEventListener('click', () => this.commitTransactions());
+                this.dom.summaryModalCancel.addEventListener('click', () => this.dom.summaryModal.classList.add('hidden'));
+                this.dom.confirmModalOk.addEventListener('click', () => this.handleConfirm());
+                this.dom.confirmModalCancel.addEventListener('click', () => this.dom.confirmModal.classList.add('hidden'));
+                
+                // Edit Colecta Modal Buttons
+                this.dom.editColectaSaveBtn.addEventListener('click', () => this.handleUpdateColecta());
+                this.dom.editColectaCancelBtn.addEventListener('click', () => this.dom.editColectaModal.classList.add('hidden'));
+
+                // Collections view event delegation
+                this.dom.envioColectasList.addEventListener('click', e => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    const { action, id } = button.dataset;
+                    if (action === 'save-monto') {
+                        this.saveEnvioMonto(id);
+                    } else if (action === 'edit-colecta') {
+                        this.showEditColectaModal(id);
+                    }
+                });
+            },
+
+            // --- DATA HANDLING & FIRESTORE ---
+            getCollectionRef(name) {
+                if (!this.state.userId) return null;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                return collection(this.state.db, `artifacts/${appId}/users/${this.state.userId}/${name}`);
+            },
+            
+            async checkAndSeedEnvioColectas() {
+                const collRef = this.getCollectionRef("envio_colectas");
+                const snapshot = await getDocs(collRef);
+                if (snapshot.empty) {
+                    const initialData = [
+                         { orden: 1, fecha: "4-5 ENERO", descripcion: "MISIONES DEL AFRICA", monto: 141400 },
+                         { orden: 2, fecha: "11-12 ENERO", descripcion: "DIOCESIS", monto: 152500 },
+                         { orden: 3, fecha: "1-2 FEBRERO", descripcion: "DIOCESIS", monto: 181720 },
+                         { orden: 4, fecha: "1-2 MARZO", descripcion: "DIOCESIS", monto: 167300 },
+                         { orden: 5, fecha: "5-6 ABRIL", descripcion: "DIOCESIS", monto: 195445 },
+                         { orden: 6, fecha: "18 abril", descripcion: "TIERRA SANTA", monto: 118150 },
+                         { orden: 7, fecha: "3-4 MAYO", descripcion: "DIOCESIS", monto: 160280 },
+                         { orden: 8, fecha: "7-8 JUNIO", descripcion: "DIOCESIS", monto: null },
+                         { orden: 9, fecha: "14-15 JUNIO", descripcion: "CARITAS", monto: null },
+                         { orden: 10, fecha: "5-6 JULIO", descripcion: "OFRENDA UNIVERSAL", monto: 141865 },
+                         { orden: 11, fecha: "12-13 JULIO", descripcion: "DIOCESIS", monto: 96070 },
+                         { orden: 12, fecha: "2-3 AGOSTO", descripcion: "DIOCESIS", monto: null },
+                         { orden: 13, fecha: "6-7 SEPTIEMBRE", descripcion: "MAS POR MENOS", monto: null },
+                         { orden: 14, fecha: "13-14 SEPTIEMBRE", descripcion: "DIOCESIS", monto: null },
+                         { orden: 15, fecha: "4-5 OCTUBRE", descripcion: "DIOCESIS", monto: null },
+                         { orden: 16, fecha: "11-12 OCTUBRE", descripcion: "JORN. DE LAS MISIONES", monto: null },
+                         { orden: 17, fecha: "1-2 NOVIEMBRE", descripcion: "DIOCESIS", monto: null },
+                         { orden: 18, fecha: "6-7 DICIEMBRE", descripcion: "DIOCESIS", monto: null },
+                         { orden: 19, fecha: "CONFIRMACION", descripcion: "CONFIRMACION", monto: null },
+                         { orden: 20, fecha: "CAMPAÑA TAE", descripcion: "CAMPAÑA TAE", monto: null },
+                    ];
+                    const batch = writeBatch(this.state.db);
+                    initialData.forEach(item => {
+                        const docRef = doc(collRef);
+                        batch.set(docRef, item);
+                    });
+                    await batch.commit();
+                    this.showToast("Datos iniciales de colectas cargados.", "success");
+                }
+                await this.loadEnvioColectas();
+            },
+
+            async loadEnvioColectas() {
+                const snapshot = await getDocs(this.getCollectionRef("envio_colectas"));
+                let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                data.sort((a, b) => a.orden - b.orden); // Sort by order
+                this.state.envioColectas = data;
+                this.renderEnvioColectas();
+            },
+            
+            async loadAllTransactions() {
+                const generalQuery = query(this.getCollectionRef("gestion_general"));
+                const bancoQuery = query(this.getCollectionRef("gestion_banco"));
+                
+                const [generalSnapshot, bancoSnapshot] = await Promise.all([getDocs(generalQuery), getDocs(bancoQuery)]);
+                
+                let generalData = generalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                let bancoData = bancoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Sort client-side
+                this.state.generalTransactions = generalData.sort((a, b) => b.fecha.localeCompare(a.fecha));
+                this.state.bancoTransactions = bancoData.sort((a, b) => b.fecha.localeCompare(a.fecha));
+                
+                this.renderHistory('general');
+                this.renderHistory('banco');
+            },
+            
+            async commitTransactions() {
+                this.dom.summaryModal.classList.add('hidden');
+                this.toggleLoader(true);
+                try {
+                    for (const trans of this.state.currentTransactions) {
+                        const collectionRef = this.getCollectionRef(trans.block === 'general' ? 'gestion_general' : 'gestion_banco');
+                        const data = { ...trans };
+                        delete data.id;
+                        delete data.block;
+                        
+                        if (this.state.editingId && this.state.currentTransactions.length === 1) {
+                            await updateDoc(doc(collectionRef, this.state.editingId), data);
+                        } else {
+                            await addDoc(collectionRef, data);
+                        }
+                    }
+                    this.showToast("Operación guardada con éxito.", "success");
+                    this.state.currentTransactions = [];
+                    this.state.editingId = null;
+                    await this.loadAllTransactions();
+                    this.showMainView();
+                } catch (error) {
+                    console.error("Error committing transactions:", error);
+                    this.showToast("Error al guardar la operación.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            
+            async deleteDate(dateString, block) {
+                this.toggleLoader(true);
+                try {
+                    const collectionRef = this.getCollectionRef(block === 'general' ? 'gestion_general' : 'gestion_banco');
+                    const q = query(collectionRef, where("fecha", "==", dateString));
+                    const snapshot = await getDocs(q);
+                    
+                    const batch = writeBatch(this.state.db);
+                    snapshot.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+
+                    this.showToast(`Registros del ${this.formatDate(dateString)} eliminados.`, "success");
+                    await this.loadAllTransactions();
+                } catch (error) {
+                    console.error("Error deleting date records:", error);
+                    this.showToast("Error al eliminar los registros.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+
+            async saveEnvioMonto(id) {
+                const input = document.getElementById(`monto-input-${id}`);
+                const monto = parseFloat(input.value);
+                if (isNaN(monto) || monto <= 0) {
+                    this.showToast("Por favor, ingresa un monto válido.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    await updateDoc(docRef, { monto: monto });
+                    this.showToast("Monto guardado.", "success");
+                    await this.loadEnvioColectas();
+                } catch (error) {
+                    console.error("Error saving monto:", error);
+                    this.showToast("Error al guardar el monto.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+
+            // --- UI RENDERING ---
+            renderHistory(block) {
+                const container = block === 'general' ? this.dom.historyGeneralContainer : this.dom.historyBancoContainer;
+                const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
+                const searchInput = block === 'general' ? this.dom.searchGeneralInput : this.dom.searchBancoInput;
+                
+                container.innerHTML = '';
+                const searchTerm = searchInput.value;
+                
+                const groupedByDate = transactions.reduce((acc, trans) => {
+                    const date = this.formatDate(trans.fecha);
+                    if (!acc[date]) acc[date] = { rawDate: trans.fecha, transactions: [] };
+                    acc[date].transactions.push(trans);
+                    return acc;
+                }, {});
+
+                const filteredDates = Object.keys(groupedByDate).filter(date => date.includes(searchTerm));
+
+                if (filteredDates.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros.</p>';
+                    return;
+                }
+
+                filteredDates.forEach(date => {
+                    const { rawDate, transactions: dailyTransactions } = groupedByDate[date];
+                    let totalIngresos = 0;
+                    let totalEgresos = 0;
+                    dailyTransactions.forEach(t => {
+                        if (t.type === 'ingreso') totalIngresos += t.monto;
+                        else totalEgresos += t.monto;
+                    });
+                    
+                    const dateGroup = document.createElement('div');
+                    dateGroup.className = 'bg-gray-50 dark:bg-slate-700 p-4 rounded-lg';
+                    dateGroup.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg">${date}</h3>
+                            <div class="flex gap-2">
+                                <button data-action="edit-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded hover:from-blue-600 hover:to-blue-700">Modificar</button>
+                                <button data-action="delete-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white px-2 py-1 rounded hover:from-red-700 hover:to-red-800">Eliminar</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-green-500">Ingresos: ${this.formatCurrency(totalIngresos)}</span>
+                            <span class="text-red-500">Egresos: ${this.formatCurrency(totalEgresos)}</span>
+                            <span class="font-semibold">Saldo: ${this.formatCurrency(totalIngresos - totalEgresos)}</span>
+                        </div>
+                    `;
+                    container.appendChild(dateGroup);
+                });
+            },
+            
+            renderEnvioColectas() {
+                this.dom.envioColectasList.innerHTML = '';
+                let subtotal = 0;
+                this.state.envioColectas.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'p-3 bg-gray-50 dark:bg-slate-700 rounded-lg grid grid-cols-4 gap-4 items-center';
+                    
+                    let montoHtml = '';
+                    if (item.monto !== null) {
+                        montoHtml = `<span class="font-semibold">${this.formatCurrency(item.monto)}</span>`;
+                        subtotal += item.monto;
+                    } else {
+                        montoHtml = `
+                            <div class="flex gap-2">
+                                <input type="number" placeholder="Monto" class="w-full p-1 border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-600" id="monto-input-${item.id}">
+                                <button data-action="save-monto" data-id="${item.id}" class="text-xs btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white px-2 py-1 rounded">Guardar</button>
+                            </div>
+                        `;
+                    }
+
+                    itemDiv.innerHTML = `
+                        <div class="font-semibold">${item.fecha}</div>
+                        <div>${item.descripcion}</div>
+                        <div class="text-right col-span-1">${montoHtml}</div>
+                        <div class="text-right">
+                            <button data-action="edit-colecta" data-id="${item.id}" class="text-xs btn-gradient bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 py-1 rounded">Editar</button>
+                        </div>
+                    `;
+                    this.dom.envioColectasList.appendChild(itemDiv);
+                });
+                this.dom.envioSubtotal.textContent = this.formatCurrency(subtotal);
+            },
+
+            // --- UI FLOW & VIEWS ---
+            showForm(type, block, data = null, date = null) {
+                this.dom.mainView.classList.add('hidden');
+                this.dom.formView.classList.remove('hidden');
+                this.dom.transactionForm.reset();
+                this.dom.transactionType.value = type;
+                this.dom.transactionBlock.value = block;
+                this.dom.transactionId.value = data ? data.id : '';
+                this.state.editingId = data ? data.id : null;
+
+                const categories = {
+                    general: {
+                        ingreso: ["COLECTAS IMPERADAS", "COLECTAS PARROQUIA", "DONACIONES", "BENEFICIOS", "ESTIPENDOS", "OTRO"],
+                        egreso: ["DEUDA OBISPADO", "SUELDO CAMILA", "SUELDO JULIO", "CARGAS SOCIALES EMPLEADOS", "ASIGNACION P.ADAN", "ASIGNACION P.JORGE", "MUTUAL DE LOS SACERDOTES", "COMBUSTIBLE", "LITURGIA", "EMPLEADA DE LA CASA PARROQUIAL", "SEGUROS DE LOS AUTOS", "APORTE PARA SEMINARIO", "MANTEMIENTO VEHICULOS", "MANTENIMIENTO DE LA CASA", "COMESTIBLE CASA PARROQUIAL", "SERVICIOS DE INTERNET", "OTRO"]
+                    },
+                    banco: {
+                        ingreso: ["DEPOSITO CAPILLA BONPLAND", "DEPOSITO DE COLECTAS", "OTRO"],
+                        egreso: ["DEBITO AUTOMATICO", "EXTRACCION", "OTRO"]
+                    }
+                };
+
+                this.dom.categoria.innerHTML = categories[block][type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+                if (data) {
+                    this.dom.formTitle.textContent = `Modificar ${type === 'ingreso' ? 'Ingreso' : 'Egreso'} (${block})`;
+                    this.dom.fecha.value = data.fecha;
+                    this.dom.categoria.value = data.categoria;
+                    this.dom.descripcion.value = data.descripcion;
+                    this.dom.monto.value = data.monto;
+                } else {
+                    this.dom.formTitle.textContent = `Registrar ${type === 'ingreso' ? 'Ingreso' : 'Egreso'} (${block})`;
+                    this.dom.fecha.value = date || new Date().toISOString().split('T')[0];
+                }
+            },
+
+            showMainView() {
+                this.dom.formView.classList.add('hidden');
+                this.dom.envioColectasView.classList.add('hidden');
+                this.dom.mainView.classList.remove('hidden');
+                this.state.currentTransactions = [];
+                this.state.editingId = null;
+            },
+            
+            showEnvioColectasView() {
+                this.dom.mainView.classList.add('hidden');
+                this.dom.envioColectasView.classList.remove('hidden');
+            },
+            
+            // --- FORM & MODAL LOGIC ---
+            handleSave(saveAndNew) {
+                if (!this.dom.transactionForm.checkValidity()) {
+                    this.dom.transactionForm.reportValidity();
+                    return;
+                }
+
+                const transaction = {
+                    type: this.dom.transactionType.value,
+                    block: this.dom.transactionBlock.value,
+                    fecha: this.dom.fecha.value,
+                    categoria: this.dom.categoria.value,
+                    descripcion: this.dom.descripcion.value,
+                    monto: parseFloat(this.dom.monto.value),
+                    id: this.state.editingId || Date.now().toString()
+                };
+
+                const index = this.state.currentTransactions.findIndex(t => t.id === transaction.id);
+                if (index > -1) this.state.currentTransactions[index] = transaction;
+                else this.state.currentTransactions.push(transaction);
+
+                if (saveAndNew) {
+                    this.showToast("Registro añadido. Puede cargar otro.", "success");
+                    const currentType = this.dom.transactionType.value;
+                    const currentBlock = this.dom.transactionBlock.value;
+                    const currentDate = this.dom.fecha.value;
+                    this.dom.transactionForm.reset();
+                    this.showForm(currentType, currentBlock, null, currentDate);
+                } else {
+                    this.showSummaryModal();
+                }
+            },
+            
+            promptForDate(type, block) {
+                this.state.pendingAction = { type: 'show-form', data: { type, block } };
+                this.dom.dateInputModal.valueAsDate = new Date();
+                this.dom.dateModal.classList.remove('hidden');
+            },
+
+            handleDateConfirm() {
+                const selectedDate = this.dom.dateInputModal.value;
+                if (!selectedDate) {
+                    this.showToast('Por favor, selecciona una fecha.', 'error');
+                    return;
+                }
+                this.dom.dateModal.classList.add('hidden');
+                if (this.state.pendingAction && this.state.pendingAction.type === 'show-form') {
+                    const { type, block } = this.state.pendingAction.data;
+                    this.showForm(type, block, null, selectedDate);
+                }
+                this.state.pendingAction = null;
+            },
+            
+            showSummaryModal() {
+                let totalIngresos = 0;
+                let totalEgresos = 0;
+                
+                this.state.currentTransactions.forEach(t => {
+                    if (t.type === 'ingreso') totalIngresos += t.monto;
+                    else totalEgresos += t.monto;
+                });
+
+                this.dom.summaryDetails.innerHTML = `
+                    <p><strong>Total Ingresos:</strong> <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></p>
+                    <p><strong>Total Egresos:</strong> <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></p>
+                    <hr class="my-2 border-slate-500">
+                    <p><strong>Saldo Final:</strong> <span class="font-bold">${this.formatCurrency(totalIngresos - totalEgresos)}</span></p>
+                `;
+                this.dom.summaryModal.classList.remove('hidden');
+            },
+
+            confirmDeleteDate(dateString, block) {
+                this.state.pendingAction = { type: 'delete-date', data: { dateString, block } };
+                this.dom.confirmModalTitle.textContent = "Confirmar Eliminación";
+                this.dom.confirmModalText.textContent = `¿Estás seguro de que quieres eliminar todos los registros del día ${this.formatDate(dateString)} para ${block}? Esta acción no se puede deshacer.`;
+                this.dom.confirmModal.classList.remove('hidden');
+            },
+            
+            handleConfirm() {
+                if (this.state.pendingAction && typeof this.state.pendingAction.callback === 'function') {
+                    this.state.pendingAction.callback();
+                } else if (this.state.pendingAction.type === 'delete-date') {
+                    const { dateString, block } = this.state.pendingAction.data;
+                    this.deleteDate(dateString, block);
+                }
+                this.dom.confirmModal.classList.add('hidden');
+                this.state.pendingAction = null;
+            },
+
+            editDate(dateString, block) {
+                const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
+                const transactionToEdit = transactions.find(t => t.fecha === dateString);
+                if (transactionToEdit) {
+                    this.showForm(transactionToEdit.type, block, transactionToEdit);
+                }
+            },
+
+            showEditColectaModal(id) {
+                const item = this.state.envioColectas.find(i => i.id === id);
+                if (!item) {
+                    this.showToast("No se encontró el registro.", "error");
+                    return;
+                }
+
+                this.dom.editColectaId.value = item.id;
+                this.dom.editColectaDescripcion.value = item.descripcion;
+                // Handle null amount gracefully
+                this.dom.editColectaMonto.value = item.monto !== null ? item.monto : ''; 
+                
+                this.dom.editColectaModal.classList.remove('hidden');
+            },
+
+            async handleUpdateColecta() {
+                const id = this.dom.editColectaId.value;
+                const descripcion = this.dom.editColectaDescripcion.value.trim();
+                const montoInput = this.dom.editColectaMonto.value;
+
+                if (!id || !descripcion) {
+                    this.showToast("La descripción no puede estar vacía.", "error");
+                    return;
+                }
+
+                // Convert amount: empty string becomes null, otherwise parse as float
+                const monto = montoInput === '' ? null : parseFloat(montoInput);
+                if (montoInput !== '' && isNaN(monto)) {
+                    this.showToast("El monto ingresado no es válido.", "error");
+                    return;
+                }
+
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    await updateDoc(docRef, { 
+                        descripcion: descripcion,
+                        monto: monto 
+                    });
+                    this.dom.editColectaModal.classList.add('hidden');
+                    this.showToast("Registro actualizado con éxito.", "success");
+                    await this.loadEnvioColectas();
+                } catch (error) {
+                    console.error("Error updating colecta:", error);
+                    this.showToast("Error al actualizar el registro.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+
+            // --- UTILITIES ---
+            toggleLoader(show) {
+                this.dom.loader.classList.toggle('hidden', !show);
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                this.dom.toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000);
+            },
+
+            downloadDateRangePDF() {
+                const startDate = this.dom.startDateFilter.value;
+                const endDate = this.dom.endDateFilter.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, selecciona un rango de fechas.", "error");
+                    return;
+                }
+
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+
+                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                    this.showToast("No hay datos para el rango seleccionado.", "error");
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.text(`Reporte Parroquial del ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 20);
+
+                let finalY = 30;
+
+                if(generalInRange.length > 0) {
+                    doc.text("Ingresos y Egresos Generales", 14, finalY);
+                    const generalBody = generalInRange.map(t => [this.formatDate(t.fecha), t.categoria, t.descripcion, t.type, this.formatCurrency(t.monto)]);
+                    doc.autoTable({
+                        startY: finalY + 5,
+                        head: [['Fecha', 'Categoría', 'Descripción', 'Tipo', 'Monto']],
+                        body: generalBody,
+                    });
+                    finalY = doc.autoTable.previous.finalY;
+                }
+
+                if(bancoInRange.length > 0) {
+                    doc.text("Movimientos de Banco", 14, finalY + 15);
+                     const bancoBody = bancoInRange.map(t => [this.formatDate(t.fecha), t.categoria, t.descripcion, t.type, this.formatCurrency(t.monto)]);
+                    doc.autoTable({
+                        startY: finalY + 20,
+                        head: [['Fecha', 'Categoría', 'Descripción', 'Tipo', 'Monto']],
+                        body: bancoBody,
+                    });
+                }
+                
+                doc.save(`reporte_${startDate}_${endDate}.pdf`);
+            },
+
+            formatCurrency(amount) {
+                if (typeof amount !== 'number') return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(0);
+                return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+            },
+
+            formatDate(dateString) {
+                // Handles YYYY-MM-DD format
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            },
+        };
+
+        // Start the application
+        App.init();
+
+    </script>
+</body>
+</html>
