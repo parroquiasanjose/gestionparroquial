@@ -83,7 +83,7 @@
                      <div class="mb-4">
                         <input type="text" id="search-general-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
                     </div>
-                    <div id="history-general-container" class="space-y-4 max-h-96 overflow-y-auto flex-grow"></div>
+                    <div id="history-general-container" class="space-y-4 min-h-[24rem] flex-grow flex flex-col justify-between"></div>
                 </div>
 
                 <!-- Bank Block -->
@@ -96,7 +96,7 @@
                      <div class="mb-4">
                         <input type="text" id="search-banco-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
                     </div>
-                    <div id="history-banco-container" class="space-y-4 max-h-96 overflow-y-auto flex-grow"></div>
+                    <div id="history-banco-container" class="space-y-4 min-h-[24rem] flex-grow flex flex-col justify-between"></div>
                 </div>
 
                 <!-- Information Block -->
@@ -142,7 +142,7 @@
             </div>
         </section>
 
-        <!-- DATA ENTRY VIEW (FORM VIEW) -->
+        <!-- DATA ENTRY VIEW -->
         <section id="data-entry-view" class="hidden max-w-7xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
             <h2 id="data-entry-title" class="text-3xl font-bold mb-4 text-center"></h2>
             <div class="mb-6">
@@ -191,19 +191,22 @@
                 </div>
             </div>
 
-            <!-- Added Transactions Summary -->
-            <div id="added-transactions-summary" class="mt-8">
+            <div class="mt-8">
                 <h3 class="text-xl font-bold mb-2">Registros a Guardar</h3>
-                <div id="added-transactions-list" class="space-y-2 max-h-48 overflow-y-auto bg-gray-100 dark:bg-slate-900 p-4 rounded-lg">
-                    <!-- Items will be added here -->
-                </div>
+                <div id="added-transactions-list" class="space-y-2 max-h-48 overflow-y-auto bg-gray-100 dark:bg-slate-900 p-4 rounded-lg"></div>
             </div>
 
-            <!-- Main action buttons -->
             <div class="mt-8 flex flex-col md:flex-row gap-4 justify-end">
                 <button id="save-all-btn" class="btn-gradient bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800">Guardar los Datos</button>
                 <button id="back-from-form-btn" class="btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
             </div>
+        </section>
+
+        <!-- EDIT DAY VIEW -->
+        <section id="edit-day-view" class="hidden max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 id="edit-day-title" class="text-3xl font-bold mb-6 text-center"></h2>
+            <div id="edit-day-list" class="space-y-3"></div>
+            <button id="back-from-edit-day-btn" class="mt-8 w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
         </section>
         
         <!-- COLLECTIONS VIEW -->
@@ -381,6 +384,32 @@
             </form>
         </div>
     </div>
+    <!-- MODAL PARA EDITAR TRANSACCIÓN INDIVIDUAL -->
+    <div id="edit-transaction-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-auto">
+            <h3 id="edit-transaction-title" class="text-2xl font-bold mb-6 text-center"></h3>
+            <form id="edit-transaction-form" class="space-y-4">
+                <input type="hidden" id="edit-transaction-id">
+                <input type="hidden" id="edit-transaction-block">
+                <div>
+                    <label for="edit-transaction-categoria" class="block text-sm font-medium">Categoría</label>
+                    <select id="edit-transaction-categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></select>
+                </div>
+                <div>
+                    <label for="edit-transaction-descripcion" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="edit-transaction-descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></textarea>
+                </div>
+                <div>
+                    <label for="edit-transaction-monto" class="block text-sm font-medium">Monto</label>
+                    <input type="number" id="edit-transaction-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="edit-transaction-cancel-btn" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                    <button type="button" id="edit-transaction-save-btn" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- LOGIC -->
     <script type="module">
@@ -404,6 +433,10 @@
                 pendingAction: null, // For modals
                 isLoading: true,
                 currentBlock: null, // To know which block we are loading data for
+                generalCurrentPage: 1,
+                bancoCurrentPage: 1,
+                recordsPerPage: 3,
+                currentEditDay: { date: null, block: null },
             },
 
             // --- DOM ELEMENTS ---
@@ -423,6 +456,7 @@
                     mainView: document.getElementById('main-view'),
                     dataEntryView: document.getElementById('data-entry-view'),
                     datePromptView: document.getElementById('date-prompt-view'),
+                    editDayView: document.getElementById('edit-day-view'),
                     envioColectasView: document.getElementById('envio-colectas-view'),
                     aportesView: document.getElementById('aportes-view'),
                     balanceView: document.getElementById('balance-view'),
@@ -437,6 +471,7 @@
                     backFromBalanceBtn: document.getElementById('back-from-balance-btn'),
                     backFromFormBtn: document.getElementById('back-from-form-btn'),
                     backFromDatePromptBtn: document.getElementById('back-from-date-prompt-btn'),
+                    backFromEditDayBtn: document.getElementById('back-from-edit-day-btn'),
                     datePromptTitle: document.getElementById('date-prompt-title'),
                     entryDateInput: document.getElementById('entry-date-input'),
                     continueToFormBtn: document.getElementById('continue-to-form-btn'),
@@ -464,6 +499,9 @@
                     downloadRangePdfBtn: document.getElementById('download-range-pdf-btn'),
                     searchRangeBtn: document.getElementById('search-range-btn'),
                     rangeResultsContainer: document.getElementById('range-results-container'),
+                    // Edit Day View
+                    editDayTitle: document.getElementById('edit-day-title'),
+                    editDayList: document.getElementById('edit-day-list'),
                     // Balance View
                     balanceTitle: document.getElementById('balance-title'),
                     balanceDateRange: document.getElementById('balance-date-range'),
@@ -502,6 +540,17 @@
                     editColectaMonto: document.getElementById('edit-colecta-monto'),
                     editColectaSaveBtn: document.getElementById('edit-colecta-save-btn'),
                     editColectaCancelBtn: document.getElementById('edit-colecta-cancel-btn'),
+                    // Edit Transaction Modal
+                    editTransactionModal: document.getElementById('edit-transaction-modal'),
+                    editTransactionTitle: document.getElementById('edit-transaction-title'),
+                    editTransactionForm: document.getElementById('edit-transaction-form'),
+                    editTransactionId: document.getElementById('edit-transaction-id'),
+                    editTransactionBlock: document.getElementById('edit-transaction-block'),
+                    editTransactionCategoria: document.getElementById('edit-transaction-categoria'),
+                    editTransactionDescripcion: document.getElementById('edit-transaction-descripcion'),
+                    editTransactionMonto: document.getElementById('edit-transaction-monto'),
+                    editTransactionSaveBtn: document.getElementById('edit-transaction-save-btn'),
+                    editTransactionCancelBtn: document.getElementById('edit-transaction-cancel-btn'),
                 };
             },
 
@@ -584,12 +633,16 @@
                     const button = e.target.closest('button[data-action]');
                     if (!button) return;
                     
-                    const { action, block, date } = button.dataset;
+                    const { action, block, date, page } = button.dataset;
 
                     if (action === 'load-data') {
                         this.showDatePromptView(block);
                     } else if (action === 'delete-date') {
                         this.confirmDeleteDate(date, block);
+                    } else if (action === 'edit-day') {
+                        this.showEditDayView(date, block);
+                    } else if (action === 'paginate') {
+                        this.handlePagination(block, parseInt(page));
                     }
                 });
                 
@@ -602,6 +655,7 @@
                 this.dom.backFromBalanceBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromFormBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromDatePromptBtn.addEventListener('click', () => this.showMainView());
+                this.dom.backFromEditDayBtn.addEventListener('click', () => this.showMainView());
                 this.dom.downloadRangePdfBtn.addEventListener('click', () => this.downloadDateRangePDF());
                 this.dom.searchRangeBtn.addEventListener('click', () => this.showDateRangeResults());
                 this.dom.continueToFormBtn.addEventListener('click', () => this.handleDatePromptContinue());
@@ -617,8 +671,8 @@
                 this.dom.saveAllBtn.addEventListener('click', () => this.showSaveConfirmation());
                 
                 // Search inputs
-                this.dom.searchGeneralInput.addEventListener('input', () => this.renderHistory('general'));
-                this.dom.searchBancoInput.addEventListener('input', () => this.renderHistory('banco'));
+                this.dom.searchGeneralInput.addEventListener('input', () => { this.state.generalCurrentPage = 1; this.renderHistory('general'); });
+                this.dom.searchBancoInput.addEventListener('input', () => { this.state.bancoCurrentPage = 1; this.renderHistory('banco'); });
 
                 // Modals
                 this.dom.saveConfirmOk.addEventListener('click', () => this.commitTransactions());
@@ -629,6 +683,23 @@
                 // Edit Colecta Modal Buttons
                 this.dom.editColectaSaveBtn.addEventListener('click', () => this.handleUpdateColecta());
                 this.dom.editColectaCancelBtn.addEventListener('click', () => this.dom.editColectaModal.classList.add('hidden'));
+
+                // Edit Day View Delegation
+                this.dom.editDayList.addEventListener('click', e => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    const { action, id, block } = button.dataset;
+                    if (action === 'edit-transaction') {
+                        this.showEditTransactionModal(id, block);
+                    } else if (action === 'delete-transaction') {
+                        this.handleDeleteSingleTransaction(id, block);
+                    }
+                });
+
+                // Edit Transaction Modal Buttons
+                this.dom.editTransactionSaveBtn.addEventListener('click', () => this.handleUpdateTransaction());
+                this.dom.editTransactionCancelBtn.addEventListener('click', () => this.dom.editTransactionModal.classList.add('hidden'));
+
 
                 // Collections view event delegation
                 this.dom.envioColectasList.addEventListener('click', e => {
@@ -848,6 +919,7 @@
             // --- UI RENDERING ---
             renderHistory(block) {
                 const container = block === 'general' ? this.dom.historyGeneralContainer : this.dom.historyBancoContainer;
+                let currentPage = block === 'general' ? this.state.generalCurrentPage : this.state.bancoCurrentPage;
                 const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
                 const searchInput = block === 'general' ? this.dom.searchGeneralInput : this.dom.searchBancoInput;
                 
@@ -863,12 +935,23 @@
 
                 const filteredDates = Object.keys(groupedByDate).filter(date => date.includes(searchTerm));
 
+                const listContainer = document.createElement('div');
+                listContainer.className = 'space-y-4';
+
                 if (filteredDates.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros.</p>';
+                    listContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros.</p>';
+                    container.appendChild(listContainer);
                     return;
                 }
 
-                filteredDates.forEach(date => {
+                const totalPages = Math.ceil(filteredDates.length / this.state.recordsPerPage);
+                if (currentPage > totalPages) currentPage = totalPages;
+                
+                const startIndex = (currentPage - 1) * this.state.recordsPerPage;
+                const endIndex = startIndex + this.state.recordsPerPage;
+                const paginatedDates = filteredDates.slice(startIndex, endIndex);
+
+                paginatedDates.forEach(date => {
                     const { rawDate, transactions: dailyTransactions } = groupedByDate[date];
                     let totalIngresos = 0;
                     let totalEgresos = 0;
@@ -883,6 +966,7 @@
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="font-bold text-lg">${date}</h3>
                             <div class="flex gap-2">
+                                <button data-action="edit-day" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded hover:from-blue-600 hover:to-blue-700">Modificar Día</button>
                                 <button data-action="delete-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white px-2 py-1 rounded hover:from-red-700 hover:to-red-800">Eliminar Día</button>
                             </div>
                         </div>
@@ -892,8 +976,26 @@
                             <span class="font-semibold">Saldo: ${this.formatCurrency(totalIngresos - totalEgresos)}</span>
                         </div>
                     `;
-                    container.appendChild(dateGroup);
+                    listContainer.appendChild(dateGroup);
                 });
+
+                container.appendChild(listContainer);
+
+                // Pagination controls
+                if (totalPages > 1) {
+                    const paginationContainer = document.createElement('div');
+                    paginationContainer.className = 'flex justify-between items-center mt-4';
+                    
+                    const prevDisabled = currentPage === 1 ? 'disabled' : '';
+                    const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+
+                    paginationContainer.innerHTML = `
+                        <button data-action="paginate" data-block="${block}" data-page="${currentPage - 1}" ${prevDisabled} class="text-sm btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+                        <span class="text-sm font-semibold">Página ${currentPage} de ${totalPages}</span>
+                        <button data-action="paginate" data-block="${block}" data-page="${currentPage + 1}" ${nextDisabled} class="text-sm btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
+                    `;
+                    container.appendChild(paginationContainer);
+                }
             },
             
             renderEnvioColectas() {
