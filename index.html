@@ -576,7 +576,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, writeBatch, getDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, writeBatch, getDoc, setDoc, enableIndexedDbPersistence, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Main App Object
         const App = {
@@ -823,7 +823,7 @@
                         if (!this.state.userId) { // Check to prevent re-running on token refresh
                             this.state.userId = user.uid;
                             console.log("User authenticated with UID:", this.state.userId);
-                            this.loadInitialData();
+                            this.setupRealtimeListeners(); // Changed from loadInitialData
                         }
                     } else {
                         // User is signed out. Attempt to sign in.
@@ -844,21 +844,23 @@
                 });
             },
             
-            async loadInitialData() {
+            async setupRealtimeListeners() {
                 if (!this.state.userId) return;
                 this.toggleLoader(true);
                 try {
-                    await Promise.all([
-                        this.checkAndSeedCategories(),
-                        this.loadAllTransactions(),
-                        this.checkAndSeedEnvioColectas(),
-                        this.checkAndSeedAportesData(),
-                        this.loadReminders()
-                    ]);
-                    this.updateReminders();
+                    await this.checkAndSeedCategories();
+                    await this.checkAndSeedEnvioColectas();
+                    await this.checkAndSeedAportesData();
+
+                    this.listenToTransactions('general');
+                    this.listenToTransactions('banco');
+                    this.listenToEnvioColectas();
+                    this.listenToAportesData();
+                    this.listenToCategories();
+                    this.listenToReminders();
                 } catch(error) {
-                    console.error("Error loading initial data:", error);
-                    this.showToast("No se pudieron cargar los datos.", "error");
+                    console.error("Error setting up listeners:", error);
+                    this.showToast("No se pudieron cargar los datos en tiempo real.", "error");
                 } finally {
                     this.toggleLoader(false);
                 }
@@ -1069,7 +1071,6 @@
                     await batch.commit();
                     this.showToast("Datos iniciales de colectas cargados.", "success");
                 }
-                await this.loadEnvioColectas();
             },
 
             async checkAndSeedAportesData() {
@@ -1093,52 +1094,53 @@
                     await setDoc(docRef, initialData);
                     this.showToast("Datos iniciales de aportes cargados.", "success");
                 }
-                await this.loadAportesData();
             },
 
-            async loadAportesData() {
+            listenToAportesData() {
                 const docRef = doc(this.getCollectionRef("configuracion_financiera"), "valores");
                 if (!docRef) return;
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    for (const key in data) {
-                        if (this.dom[key]) {
-                            this.dom[key].textContent = this.formatCurrency(data[key]);
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        for (const key in data) {
+                            if (this.dom[key]) {
+                                this.dom[key].textContent = this.formatCurrency(data[key]);
+                            }
                         }
+                    } else {
+                        console.log("No such document in configuracion_financiera!");
                     }
-                } else {
-                    console.log("No such document in configuracion_financiera!");
-                }
+                });
             },
 
-            async loadEnvioColectas() {
+            listenToEnvioColectas() {
                 const collRef = this.getCollectionRef("envio_colectas");
                 if (!collRef) return;
-                const snapshot = await getDocs(collRef);
-                let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                data.sort((a, b) => a.orden - b.orden); // Sort by order
-                this.state.envioColectas = data;
-                this.renderEnvioColectas();
+                onSnapshot(collRef, (snapshot) => {
+                    let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    data.sort((a, b) => a.orden - b.orden);
+                    this.state.envioColectas = data;
+                    this.renderEnvioColectas();
+                    this.updateReminders();
+                });
             },
             
-            async loadAllTransactions() {
-                const generalCollRef = this.getCollectionRef("gestion_general");
-                const bancoCollRef = this.getCollectionRef("gestion_banco");
-                if (!generalCollRef || !bancoCollRef) return;
+            listenToTransactions(block) {
+                const collectionName = block === 'general' ? 'gestion_general' : 'gestion_banco';
+                const collRef = this.getCollectionRef(collectionName);
+                if (!collRef) return;
 
-                const [generalSnapshot, bancoSnapshot] = await Promise.all([getDocs(generalCollRef), getDocs(bancoCollRef)]);
-                
-                let generalData = generalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                let bancoData = bancoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Sort client-side
-                this.state.generalTransactions = generalData.sort((a, b) => b.fecha.localeCompare(a.fecha));
-                this.state.bancoTransactions = bancoData.sort((a, b) => b.fecha.localeCompare(a.fecha));
-                
-                this.renderHistory('general');
-                this.renderHistory('banco');
+                onSnapshot(collRef, (snapshot) => {
+                    let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    data.sort((a, b) => b.fecha.localeCompare(a.fecha));
+                    
+                    if (block === 'general') {
+                        this.state.generalTransactions = data;
+                    } else {
+                        this.state.bancoTransactions = data;
+                    }
+                    this.renderHistory(block);
+                });
             },
             
             async commitTransactions() {
@@ -1161,7 +1163,7 @@
                     await batch.commit();
                     this.showToast("Operación guardada con éxito.", "success");
                     this.state.currentTransactions = [];
-                    await this.loadAllTransactions();
+                    // No need to reload data, onSnapshot will handle it.
                     this.showMainView();
                 } catch (error) {
                     console.error("Error committing transactions:", error);
@@ -1184,7 +1186,7 @@
                     await batch.commit();
 
                     this.showToast(`Registros del ${this.formatDate(dateString)} eliminados.`, "success");
-                    await this.loadAllTransactions();
+                    // No need to reload data, onSnapshot will handle it.
                 } catch (error) {
                     console.error("Error deleting date records:", error);
                     this.showToast("Error al eliminar los registros.", "error");
@@ -1207,8 +1209,7 @@
                     const docRef = doc(collRef, id);
                     await updateDoc(docRef, { monto: monto });
                     this.showToast("Monto guardado.", "success");
-                    await this.loadEnvioColectas();
-                    this.updateReminders();
+                    // No need to reload data, onSnapshot will handle it.
                 } catch (error) {
                     console.error("Error saving monto:", error);
                     this.showToast("Error al guardar el monto.", "error");
@@ -1609,6 +1610,13 @@
                 this.showDataEntryView(selectedDate);
             },
             
+            confirmDeleteDate(dateString, block) {
+                this.state.pendingAction = { type: 'delete-date', data: { dateString, block } };
+                this.dom.confirmModalTitle.textContent = "Confirmar Eliminación";
+                this.dom.confirmModalText.textContent = `¿Estás seguro de que quieres eliminar todos los registros del día ${this.formatDate(dateString)}? Esta acción no se puede deshacer.`;
+                this.dom.confirmModal.classList.remove('hidden');
+            },
+
             handleConfirm() {
                 if (!this.state.pendingAction) return;
 
@@ -1668,8 +1676,7 @@
                     });
                     this.dom.editColectaModal.classList.add('hidden');
                     this.showToast("Registro actualizado con éxito.", "success");
-                    await this.loadEnvioColectas();
-                    this.updateReminders();
+                    // No need to reload data, onSnapshot will handle it.
                 } catch (error) {
                     console.error("Error updating colecta:", error);
                     this.showToast("Error al actualizar el registro.", "error");
@@ -1692,7 +1699,6 @@
                     const docRef = doc(this.getCollectionRef("configuracion_financiera"), "valores");
                     await updateDoc(docRef, { [key]: newValue });
                     this.showToast(`Valor actualizado con éxito.`, "success");
-                    await this.loadAportesData();
                     this.dom.editAporteModal.classList.add('hidden');
                 } catch (error) {
                     console.error("Error updating aporte:", error);
@@ -1733,7 +1739,7 @@
                     this.dom.editTransactionModal.classList.add('hidden');
                     this.showToast("Transacción actualizada.", "success");
                     
-                    await this.loadAllTransactions();
+                    // The view will update automatically via onSnapshot
                     this.showEditDayView(this.state.currentEditDay.date, this.state.currentEditDay.block);
 
                 } catch (error) {
@@ -1760,9 +1766,9 @@
 
                     this.showToast("Transacción eliminada.", "success");
 
-                    await this.loadAllTransactions();
+                    // View will update automatically, but we need to check if we should close the edit view
                     const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
-                    const remaining = transactions.filter(t => t.fecha === this.state.currentEditDay.date);
+                    const remaining = transactions.filter(t => t.fecha === this.state.currentEditDay.date && t.id !== id);
                     if (remaining.length > 0) {
                         this.showEditDayView(this.state.currentEditDay.date, this.state.currentEditDay.block);
                     } else {
@@ -1925,7 +1931,7 @@
 
             downloadBalanceExcel() {
                 const startDate = this.dom.balanceStartDate.value;
-                const endDate = this.dom.balanceEndDate.value;
+                const endDate = this.dom.endDateFilter.value;
                 if (!startDate || !endDate) {
                     this.showToast("Por favor, filtra un rango de fechas primero.", "error");
                     return;
@@ -2095,28 +2101,30 @@
                     }
                     await batch.commit();
                 }
-                await this.loadCategories();
             },
 
-            async loadCategories() {
+            listenToCategories() {
                 const collRef = this.getCollectionRef("categorias");
                 if (!collRef) return;
-                const snapshot = await getDocs(collRef);
-                const loadedCategories = {
-                    general: { ingreso: [], egreso: [] },
-                    banco: { ingreso: [], egreso: [] }
-                };
-                snapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    loadedCategories[data.block][data.type].push({ id: doc.id, ...data });
-                });
-                // Sort categories alphabetically
-                for (const block in loadedCategories) {
-                    for (const type in loadedCategories[block]) {
-                        loadedCategories[block][type].sort((a, b) => a.name.localeCompare(b.name));
+                onSnapshot(collRef, (snapshot) => {
+                    const loadedCategories = {
+                        general: { ingreso: [], egreso: [] },
+                        banco: { ingreso: [], egreso: [] }
+                    };
+                    snapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        loadedCategories[data.block][data.type].push({ id: doc.id, ...data });
+                    });
+                    for (const block in loadedCategories) {
+                        for (const type in loadedCategories[block]) {
+                            loadedCategories[block][type].sort((a, b) => a.name.localeCompare(b.name));
+                        }
                     }
-                }
-                this.state.categories = loadedCategories;
+                    this.state.categories = loadedCategories;
+                    if (this.state.currentView === 'category-management-view') {
+                        this.renderCategoryLists();
+                    }
+                });
             },
 
             showCategoryManagementView() {
@@ -2168,8 +2176,6 @@
                     await addDoc(collRef, { name, block, type });
                     input.value = '';
                     this.showToast("Categoría añadida.", "success");
-                    await this.loadCategories();
-                    this.renderCategoryLists();
                 } catch (error) {
                     console.error("Error adding category:", error);
                     this.showToast("No se pudo añadir la categoría.", "error");
@@ -2197,8 +2203,6 @@
                     await updateDoc(docRef, { name: newName });
                     this.dom.editCategoryModal.classList.add('hidden');
                     this.showToast("Categoría actualizada.", "success");
-                    await this.loadCategories();
-                    this.renderCategoryLists();
                 } catch (error) {
                     console.error("Error updating category:", error);
                     this.showToast("No se pudo actualizar la categoría.", "error");
@@ -2220,8 +2224,6 @@
                     const docRef = doc(this.getCollectionRef("categorias"), id);
                     await deleteDoc(docRef);
                     this.showToast("Categoría eliminada.", "success");
-                    await this.loadCategories();
-                    this.renderCategoryLists();
                 } catch (error) {
                     console.error("Error deleting category:", error);
                     this.showToast("No se pudo eliminar la categoría.", "error");
@@ -2236,11 +2238,16 @@
                 this.renderRemindersList();
             },
 
-            async loadReminders() {
+            listenToReminders() {
                 const collRef = this.getCollectionRef("recordatorios");
                 if (!collRef) return;
-                const snapshot = await getDocs(collRef);
-                this.state.reminders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                onSnapshot(collRef, (snapshot) => {
+                    this.state.reminders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if(this.state.currentView === 'reminders-management-view') {
+                        this.renderRemindersList();
+                    }
+                    this.updateReminders();
+                });
             },
 
             renderRemindersList() {
@@ -2282,9 +2289,6 @@
                     await addDoc(collRef, { titulo: title, fecha: date });
                     this.dom.newReminderForm.reset();
                     this.showToast("Recordatorio añadido.", "success");
-                    await this.loadReminders();
-                    this.renderRemindersList();
-                    this.updateReminders();
                 } catch (error) {
                     console.error("Error adding reminder:", error);
                     this.showToast("No se pudo añadir el recordatorio.", "error");
@@ -2316,9 +2320,6 @@
                     await updateDoc(docRef, { titulo, fecha });
                     this.dom.editReminderModal.classList.add('hidden');
                     this.showToast("Recordatorio actualizado.", "success");
-                    await this.loadReminders();
-                    this.renderRemindersList();
-                    this.updateReminders();
                 } catch (error) {
                     console.error("Error updating reminder:", error);
                     this.showToast("No se pudo actualizar.", "error");
@@ -2340,9 +2341,6 @@
                     const docRef = doc(this.getCollectionRef("recordatorios"), id);
                     await deleteDoc(docRef);
                     this.showToast("Recordatorio eliminado.", "success");
-                    await this.loadReminders();
-                    this.renderRemindersList();
-                    this.updateReminders();
                 } catch (error) {
                     console.error("Error deleting reminder:", error);
                     this.showToast("No se pudo eliminar.", "error");
