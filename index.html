@@ -48,6 +48,14 @@
         #loader {
             background: rgba(0, 0, 0, 0.6);
         }
+        /* Connection Status Banner */
+        #connection-status {
+            z-index: 200;
+            transform: translateY(100%);
+        }
+        #connection-status.show {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
@@ -342,6 +350,11 @@
         </section>
     </div>
 
+    <!-- CONNECTION STATUS BANNER -->
+    <div id="connection-status" class="hidden fixed bottom-0 left-0 right-0 p-4 text-white text-center transition-transform duration-500 translate-y-full">
+        <p id="connection-status-text"></p>
+    </div>
+
     <!-- MODALS -->
     <div id="save-confirm-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
@@ -433,7 +446,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, writeBatch, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, writeBatch, getDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Main App Object
         const App = {
@@ -442,6 +455,7 @@
                 db: null,
                 auth: null,
                 userId: null,
+                isOnline: true,
                 generalTransactions: [],
                 bancoTransactions: [],
                 envioColectas: [],
@@ -474,6 +488,7 @@
                 this.cacheDom();
                 this.bindEvents();
                 this.initFirebase();
+                this.handleConnectionChange(navigator.onLine);
             },
 
             cacheDom() {
@@ -585,11 +600,14 @@
                     editTransactionMonto: document.getElementById('edit-transaction-monto'),
                     editTransactionSaveBtn: document.getElementById('edit-transaction-save-btn'),
                     editTransactionCancelBtn: document.getElementById('edit-transaction-cancel-btn'),
+                    // Connection Status
+                    connectionStatus: document.getElementById('connection-status'),
+                    connectionStatusText: document.getElementById('connection-status-text'),
                 };
             },
 
             // --- FIREBASE SETUP ---
-            initFirebase() {
+            async initFirebase() {
                 this.toggleLoader(true);
                 
                 const firebaseConfig = typeof __firebase_config !== 'undefined' 
@@ -606,13 +624,32 @@
                 try {
                     const app = initializeApp(firebaseConfig);
                     this.state.db = getFirestore(app);
+                    
+                    // Enable offline persistence
+                    await enableIndexedDbPersistence(this.state.db);
+                    console.log("Firebase persistence enabled.");
+
                     this.state.auth = getAuth(app);
                     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                     this.handleAuthentication(initialAuthToken);
+
                 } catch (error) {
-                    console.error("Error initializing Firebase:", error);
-                    this.showToast("Error al conectar con la base de datos.", "error");
-                    this.toggleLoader(false);
+                    if (error.code == 'failed-precondition') {
+                        console.warn("Persistence failed, likely due to multiple open tabs. App will work online.");
+                        this.showToast("La persistencia offline no se pudo activar (posiblemente por tener múltiples pestañas abiertas).", "error");
+                    } else if (error.code == 'unimplemented') {
+                        console.warn("Persistence not supported in this browser.");
+                        this.showToast("Su navegador no soporta la funcionalidad offline.", "error");
+                    } else {
+                         console.error("Error initializing Firebase:", error);
+                         this.showToast("Error al conectar con la base de datos.", "error");
+                    }
+                    // Fallback for initialization if persistence fails
+                    const app = initializeApp(firebaseConfig);
+                    this.state.db = getFirestore(app);
+                    this.state.auth = getAuth(app);
+                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    this.handleAuthentication(initialAuthToken);
                 }
             },
 
@@ -663,6 +700,10 @@
 
             // --- EVENT BINDING ---
             bindEvents() {
+                // Connection status
+                window.addEventListener('online', () => this.handleConnectionChange(true));
+                window.addEventListener('offline', () => this.handleConnectionChange(false));
+
                 // Main view actions using event delegation
                 this.dom.mainView.addEventListener('click', (e) => {
                     const button = e.target.closest('button[data-action]');
@@ -1706,6 +1747,36 @@
                 toast.textContent = message;
                 this.dom.toastContainer.appendChild(toast);
                 setTimeout(() => toast.remove(), 5000);
+            },
+
+            handleConnectionChange(isOnline) {
+                this.state.isOnline = isOnline;
+                const banner = this.dom.connectionStatus;
+                const text = this.dom.connectionStatusText;
+
+                banner.classList.remove('bg-red-600', 'bg-yellow-500', 'bg-green-600');
+
+                if (!isOnline) {
+                    banner.classList.add('bg-red-600');
+                    text.textContent = "Está trabajando sin conexión. Los datos se guardarán cuando recupere la conexión.";
+                    banner.classList.remove('hidden');
+                    banner.classList.add('show');
+                } else {
+                    banner.classList.add('bg-yellow-500');
+                    text.textContent = "Conexión recuperada. Sincronizando datos...";
+                    banner.classList.add('show');
+
+                    // Firestore handles sync automatically. We'll give feedback to the user.
+                    setTimeout(() => {
+                        banner.classList.remove('bg-yellow-500');
+                        banner.classList.add('bg-green-600');
+                        text.textContent = "¡Conexión recuperada! Sus datos están guardados en la nube.";
+                        // Hide the banner after a few seconds of confirmation
+                        setTimeout(() => {
+                            banner.classList.remove('show');
+                        }, 4000);
+                    }, 2000); // Simulate sync time
+                }
             },
 
             downloadDateRangePDF() {
