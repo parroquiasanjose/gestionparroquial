@@ -310,22 +310,23 @@
             // --- FIREBASE SETUP ---
             initFirebase() {
                 this.toggleLoader(true);
-                // These variables are expected to be provided by the environment.
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-                if (!firebaseConfig) {
-                    console.error("Firebase config is not available.");
-                    this.showToast("Error de configuración. La aplicación no puede iniciarse.", "error");
-                    this.toggleLoader(false);
-                    return;
-                }
+                
+                const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                    ? JSON.parse(__firebase_config)
+                    : {
+                        apiKey: "AIzaSyCCpr9FqklSBzkedKGQyNQrTLB30Y-AhJI",
+                        authDomain: "gestionparroquial-2fabc.firebaseapp.com",
+                        projectId: "gestionparroquial-2fabc",
+                        storageBucket: "gestionparroquial-2fabc.appspot.com",
+                        messagingSenderId: "710289559218",
+                        appId: "1:710289559218:web:26bf19a750914deb3a83ab"
+                      };
 
                 try {
                     const app = initializeApp(firebaseConfig);
                     this.state.db = getFirestore(app);
                     this.state.auth = getAuth(app);
+                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                     this.handleAuthentication(initialAuthToken);
                 } catch (error) {
                     console.error("Error initializing Firebase:", error);
@@ -343,7 +344,6 @@
                     } else if (token) {
                         try {
                             await signInWithCustomToken(this.state.auth, token);
-                            // The onAuthStateChanged listener will handle the successful sign-in.
                         } catch (error) {
                             console.error("Error signing in with custom token:", error);
                             this.showToast("Error de autenticación.", "error");
@@ -351,12 +351,11 @@
                         }
                     } else {
                         try {
-                            console.log("No user or token, signing in anonymously.");
+                            console.log("No user or token, attempting anonymous sign-in.");
                             await signInAnonymously(this.state.auth);
-                             // The onAuthStateChanged listener will handle the successful sign-in.
                         } catch (error) {
                             console.error("Error signing in anonymously:", error);
-                            this.showToast("Error de autenticación anónima.", "error");
+                            this.showToast("Error de autenticación anónima. Verifique la configuración de Firebase.", "error");
                             this.toggleLoader(false);
                         }
                     }
@@ -438,13 +437,19 @@
 
             // --- DATA HANDLING & FIRESTORE ---
             getCollectionRef(name) {
-                if (!this.state.userId) return null;
+                if (!this.state.userId) {
+                    console.error("User not authenticated, cannot get collection reference.");
+                    return null;
+                }
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                return collection(this.state.db, `artifacts/${appId}/users/${this.state.userId}/${name}`);
+                // This path structure is required for the environment's security rules.
+                const path = `artifacts/${appId}/users/${this.state.userId}/${name}`;
+                return collection(this.state.db, path);
             },
             
             async checkAndSeedEnvioColectas() {
                 const collRef = this.getCollectionRef("envio_colectas");
+                if (!collRef) return;
                 const snapshot = await getDocs(collRef);
                 if (snapshot.empty) {
                     const initialData = [
@@ -481,7 +486,9 @@
             },
 
             async loadEnvioColectas() {
-                const snapshot = await getDocs(this.getCollectionRef("envio_colectas"));
+                const collRef = this.getCollectionRef("envio_colectas");
+                if (!collRef) return;
+                const snapshot = await getDocs(collRef);
                 let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 data.sort((a, b) => a.orden - b.orden); // Sort by order
                 this.state.envioColectas = data;
@@ -489,10 +496,11 @@
             },
             
             async loadAllTransactions() {
-                const generalQuery = query(this.getCollectionRef("gestion_general"));
-                const bancoQuery = query(this.getCollectionRef("gestion_banco"));
-                
-                const [generalSnapshot, bancoSnapshot] = await Promise.all([getDocs(generalQuery), getDocs(bancoQuery)]);
+                const generalCollRef = this.getCollectionRef("gestion_general");
+                const bancoCollRef = this.getCollectionRef("gestion_banco");
+                if (!generalCollRef || !bancoCollRef) return;
+
+                const [generalSnapshot, bancoSnapshot] = await Promise.all([getDocs(generalCollRef), getDocs(bancoCollRef)]);
                 
                 let generalData = generalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 let bancoData = bancoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -511,6 +519,7 @@
                 try {
                     for (const trans of this.state.currentTransactions) {
                         const collectionRef = this.getCollectionRef(trans.block === 'general' ? 'gestion_general' : 'gestion_banco');
+                        if (!collectionRef) throw new Error("Collection reference is null");
                         const data = { ...trans };
                         delete data.id;
                         delete data.block;
@@ -538,6 +547,7 @@
                 this.toggleLoader(true);
                 try {
                     const collectionRef = this.getCollectionRef(block === 'general' ? 'gestion_general' : 'gestion_banco');
+                    if (!collectionRef) throw new Error("Collection reference is null");
                     const q = query(collectionRef, where("fecha", "==", dateString));
                     const snapshot = await getDocs(q);
                     
@@ -564,7 +574,9 @@
                 }
                 this.toggleLoader(true);
                 try {
-                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    const collRef = this.getCollectionRef("envio_colectas");
+                    if (!collRef) throw new Error("Collection reference is null");
+                    const docRef = doc(collRef, id);
                     await updateDoc(docRef, { monto: monto });
                     this.showToast("Monto guardado.", "success");
                     await this.loadEnvioColectas();
@@ -840,7 +852,9 @@
 
                 this.toggleLoader(true);
                 try {
-                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    const collRef = this.getCollectionRef("envio_colectas");
+                    if (!collRef) throw new Error("Collection reference is null");
+                    const docRef = doc(collRef, id);
                     await updateDoc(docRef, { 
                         descripcion: descripcion,
                         monto: monto 
