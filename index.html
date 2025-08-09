@@ -129,6 +129,7 @@
                         </div>
                     </div>
                     <a href="#" id="back-to-panel-btn" class="btn-gradient bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">Volver al Panel</a>
+                    <button id="logout-btn" class="btn-gradient bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">Cerrar Sesión</button>
                 </div>
             </div>
         </nav>
@@ -640,6 +641,7 @@
                     appContainer: document.getElementById('app-container'),
                     passwordInput: document.getElementById('password-input'),
                     loginBtn: document.getElementById('login-btn'),
+                    logoutBtn: document.getElementById('logout-btn'),
                     mainView: document.getElementById('main-view'),
                     dataEntryView: document.getElementById('data-entry-view'),
                     datePromptView: document.getElementById('date-prompt-view'),
@@ -810,6 +812,13 @@
                     this.dom.passwordInput.value = '';
                 }
             },
+            
+            handleLogout() {
+                localStorage.removeItem('isParishAdmin');
+                localStorage.removeItem('currentParishView');
+                this.showToast('Sesión cerrada con éxito.', 'success');
+                setTimeout(() => location.reload(), 1000);
+            },
 
             // --- FIREBASE SETUP ---
             async initFirebase() {
@@ -925,6 +934,7 @@
                         this.handleLogin();
                     }
                 });
+                this.dom.logoutBtn.addEventListener('click', () => this.handleLogout());
                 
                 // Connection status
                 window.addEventListener('online', () => this.handleConnectionChange(true));
