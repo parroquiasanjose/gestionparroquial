@@ -77,9 +77,8 @@
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex flex-col">
                     <div class="text-6xl text-center mb-4">⛪</div>
                     <h2 class="text-2xl font-bold mb-4 text-center">Ingresos y Egresos Generales</h2>
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <button data-action="prompt-date" data-type="ingreso" data-block="general" class="card-hover-effect btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Ingreso</button>
-                        <button data-action="prompt-date" data-type="egreso" data-block="general" class="card-hover-effect btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Egreso</button>
+                    <div class="grid grid-cols-1 gap-4 mb-6">
+                        <button data-action="load-data" data-block="general" class="card-hover-effect btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg text-center">Cargar Datos</button>
                     </div>
                      <div class="mb-4">
                         <input type="text" id="search-general-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
@@ -91,9 +90,8 @@
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex flex-col">
                     <div class="text-6xl text-center mb-4">🏦</div>
                     <h2 class="text-2xl font-bold mb-4 text-center">Banco</h2>
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <button data-action="prompt-date" data-type="ingreso" data-block="banco" class="card-hover-effect btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Ingreso</button>
-                        <button data-action="prompt-date" data-type="egreso" data-block="banco" class="card-hover-effect btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg text-center">Registrar Egreso</button>
+                    <div class="grid grid-cols-1 gap-4 mb-6">
+                        <button data-action="load-data" data-block="banco" class="card-hover-effect btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg text-center">Cargar Datos</button>
                     </div>
                      <div class="mb-4">
                         <input type="text" id="search-banco-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
@@ -131,35 +129,81 @@
             </div>
         </main>
 
-        <!-- FORM VIEW -->
-        <section id="form-view" class="hidden max-w-2xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
-            <h2 id="form-title" class="text-3xl font-bold mb-6 text-center"></h2>
-            <form id="transaction-form" class="space-y-4">
-                <input type="hidden" id="transaction-type">
-                <input type="hidden" id="transaction-id">
-                <input type="hidden" id="transaction-block">
-                <div>
-                    <label for="fecha" class="block text-sm font-medium">Fecha</label>
-                    <input type="date" id="fecha" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700" readonly>
+        <!-- DATE PROMPT VIEW -->
+        <section id="date-prompt-view" class="hidden max-w-2xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 id="date-prompt-title" class="text-3xl font-bold mb-6 text-center"></h2>
+            <div class="mb-6">
+                <label for="entry-date-input" class="block text-sm font-medium text-center">Confirme la fecha de carga</label>
+                <input type="date" id="entry-date-input" required class="mt-1 mx-auto block w-full max-w-xs p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+            </div>
+            <div class="flex flex-col gap-4">
+                <button id="continue-to-form-btn" class="w-full btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-700">Continuar</button>
+                <button id="back-from-date-prompt-btn" class="w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+            </div>
+        </section>
+
+        <!-- DATA ENTRY VIEW (FORM VIEW) -->
+        <section id="data-entry-view" class="hidden max-w-7xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
+            <h2 id="data-entry-title" class="text-3xl font-bold mb-4 text-center"></h2>
+            <div class="mb-6">
+                <label for="shared-date" class="block text-sm font-medium text-center">Fecha de Operaciones</label>
+                <input type="date" id="shared-date" required class="mt-1 mx-auto block w-full max-w-xs p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Ingreso Form -->
+                <div class="bg-gray-50 dark:bg-slate-700 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-4 text-green-500">Registrar Ingreso</h3>
+                    <form id="ingreso-form" class="space-y-4">
+                        <div>
+                            <label for="ingreso-categoria" class="block text-sm font-medium">Categoría</label>
+                            <select id="ingreso-categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></select>
+                        </div>
+                        <div>
+                            <label for="ingreso-descripcion" class="block text-sm font-medium">Descripción</label>
+                            <textarea id="ingreso-descripcion" rows="2" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></textarea>
+                        </div>
+                        <div>
+                            <label for="ingreso-monto" class="block text-sm font-medium">Monto</label>
+                            <input type="number" id="ingreso-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        </div>
+                        <button type="button" id="add-ingreso-btn" class="w-full btn-gradient bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 rounded-xl shadow-lg hover:from-green-600 hover:to-green-700">Confirmar y Cargar Otro</button>
+                    </form>
                 </div>
-                <div>
-                    <label for="categoria" class="block text-sm font-medium">Categoría</label>
-                    <select id="categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700"></select>
+                <!-- Egreso Form -->
+                <div class="bg-gray-50 dark:bg-slate-700 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-4 text-red-500">Registrar Egreso</h3>
+                    <form id="egreso-form" class="space-y-4">
+                         <div>
+                            <label for="egreso-categoria" class="block text-sm font-medium">Categoría</label>
+                            <select id="egreso-categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></select>
+                        </div>
+                        <div>
+                            <label for="egreso-descripcion" class="block text-sm font-medium">Descripción</label>
+                            <textarea id="egreso-descripcion" rows="2" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></textarea>
+                        </div>
+                        <div>
+                            <label for="egreso-monto" class="block text-sm font-medium">Monto</label>
+                            <input type="number" id="egreso-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        </div>
+                        <button type="button" id="add-egreso-btn" class="w-full btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-2 rounded-xl shadow-lg hover:from-red-600 hover:to-red-700">Confirmar y Cargar Otro</button>
+                    </form>
                 </div>
-                <div>
-                    <label for="descripcion" class="block text-sm font-medium">Descripción (Característica)</label>
-                    <textarea id="descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700"></textarea>
+            </div>
+
+            <!-- Added Transactions Summary -->
+            <div id="added-transactions-summary" class="mt-8">
+                <h3 class="text-xl font-bold mb-2">Registros a Guardar</h3>
+                <div id="added-transactions-list" class="space-y-2 max-h-48 overflow-y-auto bg-gray-100 dark:bg-slate-900 p-4 rounded-lg">
+                    <!-- Items will be added here -->
                 </div>
-                <div>
-                    <label for="monto" class="block text-sm font-medium">Monto</label>
-                    <input type="number" id="monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
-                </div>
-                <div class="pt-4 space-y-2">
-                    <button type="button" id="save-and-new-btn" class="w-full btn-gradient bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-800">Confirmar y Cargar Otro</button>
-                    <button type="button" id="save-and-close-btn" class="w-full btn-gradient bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-green-600 hover:to-green-800">Confirmar y Guardar</button>
-                    <button type="button" id="back-btn" class="w-full btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
-                </div>
-            </form>
+            </div>
+
+            <!-- Main action buttons -->
+            <div class="mt-8 flex flex-col md:flex-row gap-4 justify-end">
+                <button id="save-all-btn" class="btn-gradient bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800">Guardar los Datos</button>
+                <button id="back-from-form-btn" class="btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+            </div>
         </section>
         
         <!-- COLLECTIONS VIEW -->
@@ -296,27 +340,13 @@
     </div>
 
     <!-- MODALS -->
-    <div id="date-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div id="save-confirm-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
-            <h3 class="text-xl font-bold mb-4">Confirmar Fecha</h3>
-            <div class="mb-6">
-                <label for="date-input-modal" class="block text-sm font-medium mb-2">Fecha de la operación</label>
-                <input type="date" id="date-input-modal" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
-            </div>
+            <h3 class="text-xl font-bold mb-4">Confirmar Guardado</h3>
+            <p id="save-confirm-text" class="mb-6">Se guardarán todos los datos cargados. ¿Desea continuar?</p>
             <div class="flex justify-center gap-4">
-                <button id="date-modal-ok" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button>
-                <button id="date-modal-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
-            </div>
-        </div>
-    </div>
-    <div id="summary-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
-            <h3 class="text-xl font-bold mb-4">Confirmar Operación</h3>
-            <p class="mb-6">¿Estás seguro de que quieres guardar toda la operación?</p>
-            <div id="summary-details" class="text-left mb-6 p-4 bg-gray-100 dark:bg-slate-700 rounded-lg"></div>
-            <div class="flex justify-center gap-4">
-                <button id="summary-modal-ok" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button>
-                <button id="summary-modal-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Volver</button>
+                <button id="save-confirm-ok" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Sí, Guardar</button>
+                <button id="save-confirm-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">No</button>
             </div>
         </div>
     </div>
@@ -373,6 +403,7 @@
                 editingId: null,
                 pendingAction: null, // For modals
                 isLoading: true,
+                currentBlock: null, // To know which block we are loading data for
             },
 
             // --- DOM ELEMENTS ---
@@ -390,7 +421,8 @@
                     loader: document.getElementById('loader'),
                     toastContainer: document.getElementById('toast-container'),
                     mainView: document.getElementById('main-view'),
-                    formView: document.getElementById('form-view'),
+                    dataEntryView: document.getElementById('data-entry-view'),
+                    datePromptView: document.getElementById('date-prompt-view'),
                     envioColectasView: document.getElementById('envio-colectas-view'),
                     aportesView: document.getElementById('aportes-view'),
                     balanceView: document.getElementById('balance-view'),
@@ -403,18 +435,26 @@
                     backFromEnviosBtn: document.getElementById('back-from-envios-btn'),
                     backFromAportesBtn: document.getElementById('back-from-aportes-btn'),
                     backFromBalanceBtn: document.getElementById('back-from-balance-btn'),
-                    formTitle: document.getElementById('form-title'),
-                    transactionForm: document.getElementById('transaction-form'),
-                    transactionType: document.getElementById('transaction-type'),
-                    transactionId: document.getElementById('transaction-id'),
-                    transactionBlock: document.getElementById('transaction-block'),
-                    fecha: document.getElementById('fecha'),
-                    categoria: document.getElementById('categoria'),
-                    descripcion: document.getElementById('descripcion'),
-                    monto: document.getElementById('monto'),
-                    saveAndNewBtn: document.getElementById('save-and-new-btn'),
-                    saveAndCloseBtn: document.getElementById('save-and-close-btn'),
-                    backBtn: document.getElementById('back-btn'),
+                    backFromFormBtn: document.getElementById('back-from-form-btn'),
+                    backFromDatePromptBtn: document.getElementById('back-from-date-prompt-btn'),
+                    datePromptTitle: document.getElementById('date-prompt-title'),
+                    entryDateInput: document.getElementById('entry-date-input'),
+                    continueToFormBtn: document.getElementById('continue-to-form-btn'),
+                    dataEntryTitle: document.getElementById('data-entry-title'),
+                    sharedDate: document.getElementById('shared-date'),
+                    ingresoForm: document.getElementById('ingreso-form'),
+                    egresoForm: document.getElementById('egreso-form'),
+                    ingresoCategoria: document.getElementById('ingreso-categoria'),
+                    ingresoDescripcion: document.getElementById('ingreso-descripcion'),
+                    ingresoMonto: document.getElementById('ingreso-monto'),
+                    egresoCategoria: document.getElementById('egreso-categoria'),
+                    egresoDescripcion: document.getElementById('egreso-descripcion'),
+                    egresoMonto: document.getElementById('egreso-monto'),
+                    addIngresoBtn: document.getElementById('add-ingreso-btn'),
+                    addEgresoBtn: document.getElementById('add-egreso-btn'),
+                    addedTransactionsSummary: document.getElementById('added-transactions-summary'),
+                    addedTransactionsList: document.getElementById('added-transactions-list'),
+                    saveAllBtn: document.getElementById('save-all-btn'),
                     historyGeneralContainer: document.getElementById('history-general-container'),
                     historyBancoContainer: document.getElementById('history-banco-container'),
                     searchGeneralInput: document.getElementById('search-general-input'),
@@ -445,14 +485,10 @@
                     aporte_seminaristas_dividido: document.getElementById('aporte_seminaristas_dividido'),
                     aporte_seminaristas_jul25: document.getElementById('aporte_seminaristas_jul25'),
                     // Modals
-                    dateModal: document.getElementById('date-modal'),
-                    dateInputModal: document.getElementById('date-input-modal'),
-                    dateModalOk: document.getElementById('date-modal-ok'),
-                    dateModalCancel: document.getElementById('date-modal-cancel'),
-                    summaryModal: document.getElementById('summary-modal'),
-                    summaryModalOk: document.getElementById('summary-modal-ok'),
-                    summaryModalCancel: document.getElementById('summary-modal-cancel'),
-                    summaryDetails: document.getElementById('summary-details'),
+                    saveConfirmModal: document.getElementById('save-confirm-modal'),
+                    saveConfirmText: document.getElementById('save-confirm-text'),
+                    saveConfirmOk: document.getElementById('save-confirm-ok'),
+                    saveConfirmCancel: document.getElementById('save-confirm-cancel'),
                     confirmModal: document.getElementById('confirm-modal'),
                     confirmModalTitle: document.getElementById('confirm-modal-title'),
                     confirmModalText: document.getElementById('confirm-modal-text'),
@@ -548,12 +584,10 @@
                     const button = e.target.closest('button[data-action]');
                     if (!button) return;
                     
-                    const { action, type, block, date } = button.dataset;
+                    const { action, block, date } = button.dataset;
 
-                    if (action === 'prompt-date') {
-                        this.promptForDate(type, block);
-                    } else if (action === 'edit-date') {
-                        this.editDate(date, block);
+                    if (action === 'load-data') {
+                        this.showDatePromptView(block);
                     } else if (action === 'delete-date') {
                         this.confirmDeleteDate(date, block);
                     }
@@ -566,28 +600,29 @@
                 this.dom.backFromEnviosBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromAportesBtn.addEventListener('click', () => this.showMainView());
                 this.dom.backFromBalanceBtn.addEventListener('click', () => this.showMainView());
+                this.dom.backFromFormBtn.addEventListener('click', () => this.showMainView());
+                this.dom.backFromDatePromptBtn.addEventListener('click', () => this.showMainView());
                 this.dom.downloadRangePdfBtn.addEventListener('click', () => this.downloadDateRangePDF());
                 this.dom.searchRangeBtn.addEventListener('click', () => this.showDateRangeResults());
+                this.dom.continueToFormBtn.addEventListener('click', () => this.handleDatePromptContinue());
 
                 // Balance view buttons
                 this.dom.filterBalanceBtn.addEventListener('click', () => this.generateAndDisplayBalance());
                 this.dom.downloadBalancePdfBtn.addEventListener('click', () => this.downloadBalancePDF());
                 this.dom.downloadBalanceExcelBtn.addEventListener('click', () => this.downloadBalanceExcel());
 
-                // Form buttons
-                this.dom.backBtn.addEventListener('click', () => this.showMainView());
-                this.dom.saveAndNewBtn.addEventListener('click', () => this.handleSave(true));
-                this.dom.saveAndCloseBtn.addEventListener('click', () => this.handleSave(false));
-
+                // Form view buttons
+                this.dom.addIngresoBtn.addEventListener('click', () => this.addTransactionToList('ingreso'));
+                this.dom.addEgresoBtn.addEventListener('click', () => this.addTransactionToList('egreso'));
+                this.dom.saveAllBtn.addEventListener('click', () => this.showSaveConfirmation());
+                
                 // Search inputs
                 this.dom.searchGeneralInput.addEventListener('input', () => this.renderHistory('general'));
                 this.dom.searchBancoInput.addEventListener('input', () => this.renderHistory('banco'));
 
                 // Modals
-                this.dom.dateModalOk.addEventListener('click', () => this.handleDateConfirm());
-                this.dom.dateModalCancel.addEventListener('click', () => this.dom.dateModal.classList.add('hidden'));
-                this.dom.summaryModalOk.addEventListener('click', () => this.commitTransactions());
-                this.dom.summaryModalCancel.addEventListener('click', () => this.dom.summaryModal.classList.add('hidden'));
+                this.dom.saveConfirmOk.addEventListener('click', () => this.commitTransactions());
+                this.dom.saveConfirmCancel.addEventListener('click', () => this.dom.saveConfirmModal.classList.add('hidden'));
                 this.dom.confirmModalOk.addEventListener('click', () => this.handleConfirm());
                 this.dom.confirmModalCancel.addEventListener('click', () => this.dom.confirmModal.classList.add('hidden'));
                 
@@ -736,25 +771,25 @@
             },
             
             async commitTransactions() {
-                this.dom.summaryModal.classList.add('hidden');
+                this.dom.saveConfirmModal.classList.add('hidden');
+                if (this.state.currentTransactions.length === 0) {
+                    this.showToast("No hay registros nuevos para guardar.", "error");
+                    return;
+                }
                 this.toggleLoader(true);
                 try {
+                    const batch = writeBatch(this.state.db);
                     for (const trans of this.state.currentTransactions) {
                         const collectionRef = this.getCollectionRef(trans.block === 'general' ? 'gestion_general' : 'gestion_banco');
                         if (!collectionRef) throw new Error("Collection reference is null");
+                        const newDocRef = doc(collectionRef);
                         const data = { ...trans };
-                        delete data.id;
-                        delete data.block;
-                        
-                        if (this.state.editingId && this.state.currentTransactions.length === 1) {
-                            await updateDoc(doc(collectionRef, this.state.editingId), data);
-                        } else {
-                            await addDoc(collectionRef, data);
-                        }
+                        delete data.id; // Not needed as Firestore generates it
+                        batch.set(newDocRef, data);
                     }
+                    await batch.commit();
                     this.showToast("Operación guardada con éxito.", "success");
                     this.state.currentTransactions = [];
-                    this.state.editingId = null;
                     await this.loadAllTransactions();
                     this.showMainView();
                 } catch (error) {
@@ -848,8 +883,7 @@
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="font-bold text-lg">${date}</h3>
                             <div class="flex gap-2">
-                                <button data-action="edit-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded hover:from-blue-600 hover:to-blue-700">Modificar</button>
-                                <button data-action="delete-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white px-2 py-1 rounded hover:from-red-700 hover:to-red-800">Eliminar</button>
+                                <button data-action="delete-date" data-date="${rawDate}" data-block="${block}" class="text-xs btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white px-2 py-1 rounded hover:from-red-700 hover:to-red-800">Eliminar Día</button>
                             </div>
                         </div>
                         <div class="flex justify-between text-sm">
@@ -950,14 +984,16 @@
             },
 
             // --- UI FLOW & VIEWS ---
-            showForm(type, block, data = null, date = null) {
-                this.dom.mainView.classList.add('hidden');
-                this.dom.formView.classList.remove('hidden');
-                this.dom.transactionForm.reset();
-                this.dom.transactionType.value = type;
-                this.dom.transactionBlock.value = block;
-                this.dom.transactionId.value = data ? data.id : '';
-                this.state.editingId = data ? data.id : null;
+            showDataEntryView(date) {
+                const block = this.state.currentBlock;
+                this.dom.datePromptView.classList.add('hidden');
+                this.dom.dataEntryView.classList.remove('hidden');
+                
+                const title = block === 'general' ? 'Ingresos y Egresos Generales' : 'Banco';
+                this.dom.dataEntryTitle.textContent = `Cargar Datos para: ${title}`;
+                this.dom.sharedDate.value = date;
+                this.state.currentTransactions = [];
+                this.renderAddedTransactions();
 
                 const categories = {
                     general: {
@@ -970,56 +1006,45 @@
                     }
                 };
 
-                this.dom.categoria.innerHTML = categories[block][type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
-
-                if (data) {
-                    this.dom.formTitle.textContent = `Modificar ${type === 'ingreso' ? 'Ingreso' : 'Egreso'} (${block})`;
-                    this.dom.fecha.value = data.fecha;
-                    this.dom.categoria.value = data.categoria;
-                    this.dom.descripcion.value = data.descripcion;
-                    this.dom.monto.value = data.monto;
-                } else {
-                    this.dom.formTitle.textContent = `Registrar ${type === 'ingreso' ? 'Ingreso' : 'Egreso'} (${block})`;
-                    this.dom.fecha.value = date || new Date().toISOString().split('T')[0];
-                }
+                this.dom.ingresoCategoria.innerHTML = categories[block].ingreso.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+                this.dom.egresoCategoria.innerHTML = categories[block].egreso.map(cat => `<option value="${cat}">${cat}</option>`).join('');
             },
 
             showMainView() {
-                this.dom.formView.classList.add('hidden');
-                this.dom.envioColectasView.classList.add('hidden');
-                this.dom.aportesView.classList.add('hidden');
-                this.dom.balanceView.classList.add('hidden');
+                document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
                 this.dom.mainView.classList.remove('hidden');
                 this.state.currentTransactions = [];
-                this.state.editingId = null;
+                this.state.currentBlock = null;
             },
             
             showEnvioColectasView() {
-                this.dom.mainView.classList.add('hidden');
-                this.dom.aportesView.classList.add('hidden');
-                this.dom.balanceView.classList.add('hidden');
+                document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
                 this.dom.envioColectasView.classList.remove('hidden');
             },
 
             showAportesView() {
-                this.dom.mainView.classList.add('hidden');
-                this.dom.envioColectasView.classList.add('hidden');
-                this.dom.balanceView.classList.add('hidden');
+                document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
                 this.dom.aportesView.classList.remove('hidden');
             },
 
             showBalanceView() {
-                this.dom.mainView.classList.add('hidden');
-                this.dom.envioColectasView.classList.add('hidden');
-                this.dom.aportesView.classList.add('hidden');
+                document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
                 this.dom.balanceView.classList.remove('hidden');
-                // Set default dates to current month and generate initial balance
                 const today = new Date();
                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
                 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
                 this.dom.balanceStartDate.value = firstDay;
                 this.dom.balanceEndDate.value = lastDay;
                 this.generateAndDisplayBalance();
+            },
+
+            showDatePromptView(block) {
+                this.state.currentBlock = block;
+                document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden'));
+                this.dom.datePromptView.classList.remove('hidden');
+                const title = block === 'general' ? 'Ingresos y Egresos Generales' : 'Banco';
+                this.dom.datePromptTitle.textContent = `Fecha para: ${title}`;
+                this.dom.entryDateInput.valueAsDate = new Date();
             },
             
             showDateRangeResults() {
@@ -1053,76 +1078,75 @@
             },
 
             // --- FORM & MODAL LOGIC ---
-            handleSave(saveAndNew) {
-                if (!this.dom.transactionForm.checkValidity()) {
-                    this.dom.transactionForm.reportValidity();
+            addTransactionToList(type) {
+                const form = type === 'ingreso' ? this.dom.ingresoForm : this.dom.egresoForm;
+                const categoria = document.getElementById(`${type}-categoria`).value;
+                const descripcion = document.getElementById(`${type}-descripcion`).value;
+                const monto = parseFloat(document.getElementById(`${type}-monto`).value);
+                const fecha = this.dom.sharedDate.value;
+
+                if (!fecha || !categoria || isNaN(monto) || monto <= 0) {
+                    this.showToast("Por favor, complete la fecha, categoría y un monto válido.", "error");
                     return;
                 }
 
                 const transaction = {
-                    type: this.dom.transactionType.value,
-                    block: this.dom.transactionBlock.value,
-                    fecha: this.dom.fecha.value,
-                    categoria: this.dom.categoria.value,
-                    descripcion: this.dom.descripcion.value,
-                    monto: parseFloat(this.dom.monto.value),
-                    id: this.state.editingId || Date.now().toString()
+                    id: Date.now(), // Temporary ID for list management
+                    type: type,
+                    block: this.state.currentBlock,
+                    fecha: fecha,
+                    categoria: categoria,
+                    descripcion: descripcion,
+                    monto: monto,
                 };
 
-                const index = this.state.currentTransactions.findIndex(t => t.id === transaction.id);
-                if (index > -1) this.state.currentTransactions[index] = transaction;
-                else this.state.currentTransactions.push(transaction);
+                this.state.currentTransactions.push(transaction);
+                this.renderAddedTransactions();
+                form.reset();
+                this.showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} añadido a la lista.`, "success");
+            },
 
-                if (saveAndNew) {
-                    this.showToast("Registro añadido. Puede cargar otro.", "success");
-                    const currentType = this.dom.transactionType.value;
-                    const currentBlock = this.dom.transactionBlock.value;
-                    const currentDate = this.dom.fecha.value;
-                    this.dom.transactionForm.reset();
-                    this.showForm(currentType, currentBlock, null, currentDate);
-                } else {
-                    this.showSummaryModal();
+            renderAddedTransactions() {
+                const list = this.dom.addedTransactionsList;
+                list.innerHTML = '';
+                if (this.state.currentTransactions.length === 0) {
+                    list.innerHTML = '<p class="text-center text-gray-500">Aún no hay registros para guardar.</p>';
+                    return;
                 }
+                this.state.currentTransactions.forEach(t => {
+                    const item = document.createElement('div');
+                    item.className = `flex justify-between items-center p-2 rounded-lg ${t.type === 'ingreso' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`;
+                    item.innerHTML = `
+                        <div>
+                            <span class="font-bold">${t.categoria}</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">${t.descripcion ? ' - ' + t.descripcion : ''}</span>
+                        </div>
+                        <span class="font-semibold">${this.formatCurrency(t.monto)}</span>
+                    `;
+                    list.appendChild(item);
+                });
+            },
+
+            showSaveConfirmation() {
+                if (this.state.currentTransactions.length === 0) {
+                    this.showToast("No hay registros nuevos para guardar.", "error");
+                    return;
+                }
+                const ingresosCount = this.state.currentTransactions.filter(t => t.type === 'ingreso').length;
+                const egresosCount = this.state.currentTransactions.filter(t => t.type === 'egreso').length;
+                this.dom.saveConfirmText.textContent = `Se guardarán ${ingresosCount} ingreso(s) y ${egresosCount} egreso(s). ¿Desea continuar?`;
+                this.dom.saveConfirmModal.classList.remove('hidden');
             },
             
-            promptForDate(type, block) {
-                this.state.pendingAction = { type: 'show-form', data: { type, block } };
-                this.dom.dateInputModal.valueAsDate = new Date();
-                this.dom.dateModal.classList.remove('hidden');
-            },
-
-            handleDateConfirm() {
-                const selectedDate = this.dom.dateInputModal.value;
+            handleDatePromptContinue() {
+                const selectedDate = this.dom.entryDateInput.value;
                 if (!selectedDate) {
                     this.showToast('Por favor, selecciona una fecha.', 'error');
                     return;
                 }
-                this.dom.dateModal.classList.add('hidden');
-                if (this.state.pendingAction && this.state.pendingAction.type === 'show-form') {
-                    const { type, block } = this.state.pendingAction.data;
-                    this.showForm(type, block, null, selectedDate);
-                }
-                this.state.pendingAction = null;
+                this.showDataEntryView(selectedDate);
             },
             
-            showSummaryModal() {
-                let totalIngresos = 0;
-                let totalEgresos = 0;
-                
-                this.state.currentTransactions.forEach(t => {
-                    if (t.type === 'ingreso') totalIngresos += t.monto;
-                    else totalEgresos += t.monto;
-                });
-
-                this.dom.summaryDetails.innerHTML = `
-                    <p><strong>Total Ingresos:</strong> <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></p>
-                    <p><strong>Total Egresos:</strong> <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></p>
-                    <hr class="my-2 border-slate-500">
-                    <p><strong>Saldo Final:</strong> <span class="font-bold">${this.formatCurrency(totalIngresos - totalEgresos)}</span></p>
-                `;
-                this.dom.summaryModal.classList.remove('hidden');
-            },
-
             confirmDeleteDate(dateString, block) {
                 this.state.pendingAction = { type: 'delete-date', data: { dateString, block } };
                 this.dom.confirmModalTitle.textContent = "Confirmar Eliminación";
@@ -1131,22 +1155,12 @@
             },
             
             handleConfirm() {
-                if (this.state.pendingAction && typeof this.state.pendingAction.callback === 'function') {
-                    this.state.pendingAction.callback();
-                } else if (this.state.pendingAction.type === 'delete-date') {
+                if (this.state.pendingAction && this.state.pendingAction.type === 'delete-date') {
                     const { dateString, block } = this.state.pendingAction.data;
                     this.deleteDate(dateString, block);
                 }
                 this.dom.confirmModal.classList.add('hidden');
                 this.state.pendingAction = null;
-            },
-
-            editDate(dateString, block) {
-                const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
-                const transactionToEdit = transactions.find(t => t.fecha === dateString);
-                if (transactionToEdit) {
-                    this.showForm(transactionToEdit.type, block, transactionToEdit);
-                }
             },
 
             showEditColectaModal(id) {
@@ -1158,7 +1172,6 @@
 
                 this.dom.editColectaId.value = item.id;
                 this.dom.editColectaDescripcion.value = item.descripcion;
-                // Handle null amount gracefully
                 this.dom.editColectaMonto.value = item.monto !== null ? item.monto : ''; 
                 
                 this.dom.editColectaModal.classList.remove('hidden');
@@ -1174,7 +1187,6 @@
                     return;
                 }
 
-                // Convert amount: empty string becomes null, otherwise parse as float
                 const monto = montoInput === '' ? null : parseFloat(montoInput);
                 if (montoInput !== '' && isNaN(monto)) {
                     this.showToast("El monto ingresado no es válido.", "error");
@@ -1203,12 +1215,11 @@
 
             async handleEditAporte(key, label) {
                 const currentValueText = this.dom[key].textContent;
-                // Simple parse from currency string
                 const currentValue = parseFloat(currentValueText.replace(/[^0-9,-]+/g,"").replace(",", "."));
 
                 const newValueText = prompt(`Modificar ${label}:`, currentValue);
                 
-                if (newValueText === null) return; // User cancelled
+                if (newValueText === null) return;
 
                 const newValue = parseFloat(newValueText);
                 if (isNaN(newValue)) {
