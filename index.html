@@ -629,7 +629,7 @@
             init() {
                 this.cacheDom();
                 this.bindEvents();
-                // Firebase will be initialized after successful login
+                this.checkPersistentLogin();
             },
 
             cacheDom() {
@@ -787,10 +787,20 @@
                 };
             },
             
+            checkPersistentLogin() {
+                if (localStorage.getItem('isParishAdmin') === 'true') {
+                    this.state.isAuthenticated = true;
+                    this.dom.loginView.classList.add('hidden');
+                    this.dom.appContainer.classList.remove('hidden');
+                    this.initFirebase();
+                }
+            },
+
             handleLogin() {
                 const adminPasswords = ['leandro', 'adan', 'jose'];
                 const enteredPassword = this.dom.passwordInput.value.trim().toLowerCase();
                 if (adminPasswords.includes(enteredPassword)) {
+                    localStorage.setItem('isParishAdmin', 'true');
                     this.state.isAuthenticated = true;
                     this.dom.loginView.classList.add('hidden');
                     this.dom.appContainer.classList.remove('hidden');
@@ -890,6 +900,14 @@
                     this.listenToAportesData();
                     this.listenToCategories();
                     this.listenToReminders();
+                    
+                    const lastView = localStorage.getItem('currentParishView');
+                    if (lastView) {
+                        this.switchView(lastView);
+                    } else {
+                        this.showMainView();
+                    }
+
                 } catch(error) {
                     console.error("Error setting up listeners:", error);
                     this.showToast("No se pudieron cargar los datos en tiempo real.", "error");
@@ -1430,6 +1448,7 @@
 
             // --- UI FLOW & VIEWS ---
             switchView(viewId) {
+                localStorage.setItem('currentParishView', viewId);
                 const currentViewEl = document.getElementById(this.state.currentView);
                 if (currentViewEl) {
                     currentViewEl.classList.remove('visible');
