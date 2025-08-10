@@ -611,6 +611,19 @@
             </form>
         </div>
     </div>
+    <!-- MODAL PARA CONFIRMAR DESCARGA PDF -->
+    <div id="pdf-confirm-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-auto text-center">
+            <h3 class="text-xl font-bold mb-4">Descargar PDF con Fechas</h3>
+            <p class="mb-6">¿Desea incluir el rango de fechas en el nombre del archivo PDF?</p>
+            <div class="flex justify-center gap-4">
+                <button id="pdf-confirm-yes" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Sí</button>
+                <button id="pdf-confirm-no" class="btn-gradient bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-2 px-6 rounded-lg">No</button>
+                <button id="pdf-confirm-cancel" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- LOGIC -->
     <script type="module">
@@ -653,6 +666,12 @@
 
             // --- INITIALIZATION ---
             init() {
+                // Bind 'this' for all methods to ensure correct context
+                for (const key in this) {
+                    if (typeof this[key] === 'function' && key !== 'init') {
+                        this[key] = this[key].bind(this);
+                    }
+                }
                 this.cacheDom();
                 this.bindEvents();
                 this.checkPersistentLogin();
@@ -762,6 +781,10 @@
                     confirmModalText: document.getElementById('confirm-modal-text'),
                     confirmModalOk: document.getElementById('confirm-modal-ok'),
                     confirmModalCancel: document.getElementById('confirm-modal-cancel'),
+                    pdfConfirmModal: document.getElementById('pdf-confirm-modal'),
+                    pdfConfirmYes: document.getElementById('pdf-confirm-yes'),
+                    pdfConfirmNo: document.getElementById('pdf-confirm-no'),
+                    pdfConfirmCancel: document.getElementById('pdf-confirm-cancel'),
                     // Edit Colecta Modal
                     editColectaModal: document.getElementById('edit-colecta-modal'),
                     editColectaForm: document.getElementById('edit-colecta-form'),
@@ -828,7 +851,11 @@
                     this.state.isAuthenticated = true;
                     this.dom.loginView.classList.add('hidden');
                     this.dom.appContainer.classList.remove('hidden');
-                    this.initFirebase();
+                    this.initFirebase().catch(e => {
+                         console.error("Failed to initialize Firebase on persistent login:", e);
+                         this.showToast("Error de inicialización.", "error");
+                         this.toggleLoader(false);
+                    });
                 }
             },
 
@@ -840,7 +867,11 @@
                     this.state.isAuthenticated = true;
                     this.dom.loginView.classList.add('hidden');
                     this.dom.appContainer.classList.remove('hidden');
-                    this.initFirebase(); // Initialize Firebase after successful login
+                    this.initFirebase().catch(e => {
+                         console.error("Failed to initialize Firebase on login:", e);
+                         this.showToast("Error de inicialización.", "error");
+                         this.toggleLoader(false);
+                    });
                 } else {
                     this.showToast('Clave incorrecta.', 'error');
                     this.dom.passwordInput.value = '';
@@ -857,7 +888,6 @@
             // --- FIREBASE SETUP ---
             async initFirebase() {
                 this.toggleLoader(true);
-                
                 const firebaseConfig = typeof __firebase_config !== 'undefined' 
                     ? JSON.parse(__firebase_config)
                     : {
@@ -869,18 +899,12 @@
                         appId: "1:710289559218:web:26bf19a750914deb3a83ab"
                       };
 
-                const initializeServices = (app) => {
-                    this.state.db = getFirestore(app);
-                    this.state.auth = getAuth(app);
-                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                    this.handleAuthentication(initialAuthToken);
-                };
-
+                let app;
                 try {
-                    const app = initializeApp(firebaseConfig);
-                    await enableIndexedDbPersistence(getFirestore(app));
+                    app = initializeApp(firebaseConfig);
+                    this.state.db = getFirestore(app);
+                    await enableIndexedDbPersistence(this.state.db);
                     console.log("Firebase persistence enabled.");
-                    initializeServices(app);
                 } catch (error) {
                     console.warn("Firebase persistence error:", error.code);
                     if (error.code == 'failed-precondition') {
@@ -889,36 +913,54 @@
                         this.showToast("Su navegador no soporta la funcionalidad offline.", "error");
                     }
                     // Fallback to online-only mode
-                    const app = initializeApp(firebaseConfig);
-                    initializeServices(app);
+                    if (!app) { // Initialize only if it failed before
+                        app = initializeApp(firebaseConfig);
+                        this.state.db = getFirestore(app);
+                    }
+                }
+
+                this.state.auth = getAuth(app);
+                this.setupAuthListener();
+                await this.signInUser();
+            },
+
+            async signInUser() {
+                try {
+                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(this.state.auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(this.state.auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    if (error.code === 'auth/invalid-custom-token') {
+                        console.log("Custom token invalid, falling back to anonymous sign-in.");
+                        try {
+                            await signInAnonymously(this.state.auth);
+                        } catch (anonError) {
+                            console.error("Anonymous sign-in failed after custom token failure:", anonError);
+                            this.showToast("Error de autenticación anónima.", "error");
+                            throw anonError; // Re-throw to be caught by the caller
+                        }
+                    } else {
+                       this.showToast("Error de autenticación.", "error");
+                       throw error; // Re-throw to be caught by the caller
+                    }
                 }
             },
 
-            handleAuthentication(token) {
-                const auth = this.state.auth;
-                onAuthStateChanged(auth, (user) => {
+            setupAuthListener() {
+                onAuthStateChanged(this.state.auth, (user) => {
                     if (user) {
-                        // User is signed in.
-                        if (!this.state.userId) { // Check to prevent re-running on token refresh
+                        if (!this.state.userId) { 
                             this.state.userId = user.uid;
                             console.log("User authenticated with UID:", this.state.userId);
                             this.setupRealtimeListeners();
                         }
                     } else {
-                        // User is signed out. Attempt to sign in.
-                        (async () => {
-                            try {
-                                if (token) {
-                                    await signInWithCustomToken(auth, token);
-                                } else {
-                                    await signInAnonymously(auth);
-                                }
-                            } catch (error) {
-                                console.error("Authentication error:", error);
-                                this.showToast("Error de autenticación.", "error");
-                                this.toggleLoader(false);
-                            }
-                        })();
+                        this.state.userId = null;
+                        console.log("User is signed out.");
                     }
                 });
             },
@@ -956,17 +998,17 @@
             // --- EVENT BINDING ---
             bindEvents() {
                  // Login
-                this.dom.loginBtn.addEventListener('click', () => this.handleLogin());
+                this.dom.loginBtn.addEventListener('click', this.handleLogin);
                 this.dom.passwordInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         this.handleLogin();
                     }
                 });
-                this.dom.logoutBtn.addEventListener('click', () => this.handleLogout());
+                this.dom.logoutBtn.addEventListener('click', this.handleLogout);
                 
                 // Connection status
-                window.addEventListener('online', () => this.handleConnectionChange(true));
-                window.addEventListener('offline', () => this.handleConnectionChange(false));
+                window.addEventListener('online', this.handleConnectionChange);
+                window.addEventListener('offline', this.handleConnectionChange);
 
                 this.dom.backToPanelBtn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -992,53 +1034,56 @@
                 });
                 
                 // Other buttons
-                this.dom.enviosColectasBtn.addEventListener('click', () => this.showEnvioColectasView());
-                this.dom.aportesBtn.addEventListener('click', () => this.showAportesView());
-                this.dom.balanceBtn.addEventListener('click', () => this.showBalanceView());
-                this.dom.manageCategoriesBtn.addEventListener('click', () => this.showCategoryManagementView());
-                this.dom.manageRemindersBtn.addEventListener('click', () => this.showRemindersManagementView());
-                this.dom.backFromEnviosBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromAportesBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromBalanceBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromFormBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromDatePromptBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromEditDayBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromCategoriesBtn.addEventListener('click', () => this.showMainView());
-                this.dom.backFromRemindersBtn.addEventListener('click', () => this.showMainView());
-                this.dom.downloadRangePdfBtn.addEventListener('click', () => this.downloadDateRangePDF());
-                this.dom.searchRangeBtn.addEventListener('click', () => this.showDateRangeResults());
-                this.dom.continueToFormBtn.addEventListener('click', () => this.handleDatePromptContinue());
+                this.dom.enviosColectasBtn.addEventListener('click', this.showEnvioColectasView);
+                this.dom.aportesBtn.addEventListener('click', this.showAportesView);
+                this.dom.balanceBtn.addEventListener('click', this.showBalanceView);
+                this.dom.manageCategoriesBtn.addEventListener('click', this.showCategoryManagementView);
+                this.dom.manageRemindersBtn.addEventListener('click', this.showRemindersManagementView);
+                this.dom.backFromEnviosBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromAportesBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromBalanceBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromFormBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromDatePromptBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromEditDayBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromCategoriesBtn.addEventListener('click', this.showMainView);
+                this.dom.backFromRemindersBtn.addEventListener('click', this.showMainView);
+                this.dom.downloadRangePdfBtn.addEventListener('click', this.downloadDateRangePDF);
+                this.dom.searchRangeBtn.addEventListener('click', this.showDateRangeResults);
+                this.dom.continueToFormBtn.addEventListener('click', this.handleDatePromptContinue);
 
                 // Balance view buttons
-                this.dom.filterBalanceBtn.addEventListener('click', () => this.generateAndDisplayBalance());
-                this.dom.downloadBalancePdfBtn.addEventListener('click', () => this.downloadBalancePDF());
-                this.dom.downloadBalanceExcelBtn.addEventListener('click', () => this.downloadBalanceExcel());
+                this.dom.filterBalanceBtn.addEventListener('click', this.generateAndDisplayBalance);
+                this.dom.downloadBalancePdfBtn.addEventListener('click', this.showPdfConfirmModal);
+                this.dom.downloadBalanceExcelBtn.addEventListener('click', this.generateSummarizedBalanceExcel);
 
                 // Form view buttons
                 this.dom.addIngresoBtn.addEventListener('click', () => this.addTransactionToList('ingreso'));
                 this.dom.addEgresoBtn.addEventListener('click', () => this.addTransactionToList('egreso'));
-                this.dom.saveAllBtn.addEventListener('click', () => this.showSaveConfirmation());
+                this.dom.saveAllBtn.addEventListener('click', this.showSaveConfirmation);
                 
                 // Search inputs
                 this.dom.searchGeneralInput.addEventListener('input', () => { this.state.generalCurrentPage = 1; this.renderHistory('general'); });
                 this.dom.searchBancoInput.addEventListener('input', () => { this.state.bancoCurrentPage = 1; this.renderHistory('banco'); });
 
                 // Modals
-                this.dom.saveConfirmOk.addEventListener('click', () => this.commitTransactions());
+                this.dom.saveConfirmOk.addEventListener('click', this.commitTransactions);
                 this.dom.saveConfirmCancel.addEventListener('click', () => this.dom.saveConfirmModal.classList.add('hidden'));
-                this.dom.confirmModalOk.addEventListener('click', () => this.handleConfirm());
+                this.dom.confirmModalOk.addEventListener('click', this.handleConfirm);
                 this.dom.confirmModalCancel.addEventListener('click', () => this.dom.confirmModal.classList.add('hidden'));
-                
+                this.dom.pdfConfirmYes.addEventListener('click', () => this.generateSummarizedBalancePDF(true));
+                this.dom.pdfConfirmNo.addEventListener('click', () => this.generateSummarizedBalancePDF(false));
+                this.dom.pdfConfirmCancel.addEventListener('click', () => this.dom.pdfConfirmModal.classList.add('hidden'));
+
                 // Edit Colecta Modal Buttons
-                this.dom.editColectaSaveBtn.addEventListener('click', () => this.handleUpdateColecta());
+                this.dom.editColectaSaveBtn.addEventListener('click', this.handleUpdateColecta);
                 this.dom.editColectaCancelBtn.addEventListener('click', () => this.dom.editColectaModal.classList.add('hidden'));
 
                 // Edit Aporte Modal Buttons
-                this.dom.editAporteSaveBtn.addEventListener('click', () => this.handleUpdateAporte());
+                this.dom.editAporteSaveBtn.addEventListener('click', this.handleUpdateAporte);
                 this.dom.editAporteCancelBtn.addEventListener('click', () => this.dom.editAporteModal.classList.add('hidden'));
 
                 // Edit Category Modal Buttons
-                this.dom.editCategorySaveBtn.addEventListener('click', () => this.handleUpdateCategory());
+                this.dom.editCategorySaveBtn.addEventListener('click', this.handleUpdateCategory);
                 this.dom.editCategoryCancelBtn.addEventListener('click', () => this.dom.editCategoryModal.classList.add('hidden'));
 
                 // Edit Day View Delegation
@@ -1054,11 +1099,11 @@
                 });
 
                 // Edit Transaction Modal Buttons
-                this.dom.editTransactionSaveBtn.addEventListener('click', () => this.handleUpdateTransaction());
+                this.dom.editTransactionSaveBtn.addEventListener('click', this.handleUpdateTransaction);
                 this.dom.editTransactionCancelBtn.addEventListener('click', () => this.dom.editTransactionModal.classList.add('hidden'));
                 
                 // Edit Temp Transaction Modal Buttons
-                this.dom.editTempTransactionSaveBtn.addEventListener('click', () => this.handleUpdateTempTransaction());
+                this.dom.editTempTransactionSaveBtn.addEventListener('click', this.handleUpdateTempTransaction);
                 this.dom.editTempTransactionCancelBtn.addEventListener('click', () => this.dom.editTempTransactionModal.classList.add('hidden'));
 
                 // Collections view event delegation
@@ -1121,7 +1166,7 @@
                         this.handleDeleteReminder(id);
                     }
                 });
-                this.dom.editReminderSaveBtn.addEventListener('click', () => this.handleUpdateReminder());
+                this.dom.editReminderSaveBtn.addEventListener('click', this.handleUpdateReminder);
                 this.dom.editReminderCancelBtn.addEventListener('click', () => this.dom.editReminderModal.classList.add('hidden'));
 
                 // Data Entry List Delegation (for deleting temporary items)
@@ -1565,7 +1610,11 @@
                 this.switchView('date-prompt-view');
                 const title = block === 'general' ? 'Ingresos y Egresos Generales' : 'Banco';
                 this.dom.datePromptTitle.textContent = `Fecha para: ${title}`;
-                this.dom.entryDateInput.valueAsDate = new Date();
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(today.getDate()).padStart(2, '0');
+                this.dom.entryDateInput.value = `${year}-${month}-${day}`;
             },
             
             showDateRangeResults() {
@@ -1652,6 +1701,53 @@
                 this.dom.editTransactionMonto.value = transaction.monto;
 
                 this.dom.editTransactionModal.classList.remove('hidden');
+            },
+
+            // --- UI HELPERS ---
+            toggleLoader(isLoading) {
+                this.dom.loader.classList.toggle('hidden', !isLoading);
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                this.dom.toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                       toast.parentElement.removeChild(toast);
+                    }
+                }, 5000);
+            },
+            
+            handleConnectionChange() {
+                this.state.isOnline = navigator.onLine;
+                const statusDiv = this.dom.connectionStatus;
+                const statusText = this.dom.connectionStatusText;
+
+                statusDiv.classList.remove('hidden');
+
+                if (this.state.isOnline) {
+                    statusDiv.classList.remove('bg-red-600');
+                    statusDiv.classList.add('bg-green-600');
+                    statusText.textContent = 'Conectado. Sincronizando datos.';
+                    setTimeout(() => {
+                        statusDiv.classList.add('hidden');
+                    }, 3000);
+                } else {
+                    statusDiv.classList.remove('bg-green-600');
+                    statusDiv.classList.add('bg-red-600');
+                    statusText.textContent = 'Sin conexión. Trabajando en modo offline.';
+                }
+            },
+            
+            handlePagination(block, page) {
+                if (block === 'general') {
+                    this.state.generalCurrentPage = page;
+                } else {
+                    this.state.bancoCurrentPage = page;
+                }
+                this.renderHistory(block);
             },
 
             // --- FORM & MODAL LOGIC ---
@@ -2040,7 +2136,39 @@
                 `;
             },
 
-            downloadBalancePDF() {
+            showPdfConfirmModal() {
+                this.dom.pdfConfirmModal.classList.remove('hidden');
+            },
+
+            summarizeTransactionsByCategory(transactions) {
+                const summary = {
+                    ingreso: {},
+                    egreso: {}
+                };
+
+                transactions.forEach(t => {
+                    const type = t.type; // 'ingreso' or 'egreso'
+                    const category = t.categoria;
+                    if (!summary[type][category]) {
+                        summary[type][category] = 0;
+                    }
+                    summary[type][category] += t.monto;
+                });
+
+                const toArray = (summaryObj) => {
+                    return Object.keys(summaryObj)
+                        .map(key => ({ categoria: key, monto: summaryObj[key] }))
+                        .sort((a, b) => b.monto - a.monto); // Sort by amount descending
+                };
+
+                return {
+                    ingresos: toArray(summary.ingreso),
+                    egresos: toArray(summary.egreso)
+                };
+            },
+
+            generateSummarizedBalancePDF(withDateInFilename) {
+                this.dom.pdfConfirmModal.classList.add('hidden');
                 const startDate = this.dom.balanceStartDate.value;
                 const endDate = this.dom.balanceEndDate.value;
                 if (!startDate || !endDate) {
@@ -2062,42 +2190,63 @@
                 let totalIngresos = 0;
                 let totalEgresos = 0;
 
-                if (generalInRange.length > 0) {
-                    doc.setFontSize(14);
-                    doc.text("Ingresos y Egresos Generales", 14, finalY);
-                    const body = generalInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
-                        if (t.type === 'ingreso') totalIngresos += t.monto;
-                        else totalEgresos += t.monto;
-                        return [this.formatDate(t.fecha), t.categoria, t.type === 'ingreso' ? this.formatCurrency(t.monto) : '-', t.type === 'egreso' ? this.formatCurrency(t.monto) : '-'];
-                    });
-                    doc.autoTable({ startY: finalY + 5, head: [['Fecha', 'Categoría', 'Ingreso', 'Egreso']], body });
-                    finalY = doc.autoTable.previous.finalY;
+                const generalSummary = this.summarizeTransactionsByCategory(generalInRange);
+                const bancoSummary = this.summarizeTransactionsByCategory(bancoInRange);
+
+                doc.setFontSize(14);
+                doc.text("Resumen General", 14, finalY);
+                finalY += 10;
+
+                if (generalSummary.ingresos.length > 0) {
+                    doc.setFontSize(12);
+                    doc.text("Ingresos Generales", 14, finalY);
+                    const body = generalSummary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 10;
                 }
 
-                if (bancoInRange.length > 0) {
-                    finalY += 15;
-                    doc.setFontSize(14);
-                    doc.text("Movimientos de Banco", 14, finalY);
-                    const body = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
-                        if (t.type === 'ingreso') totalIngresos += t.monto;
-                        else totalEgresos += t.monto;
-                        return [this.formatDate(t.fecha), t.categoria, t.type === 'ingreso' ? this.formatCurrency(t.monto) : '-', t.type === 'egreso' ? this.formatCurrency(t.monto) : '-'];
-                    });
-                    doc.autoTable({ startY: finalY + 5, head: [['Fecha', 'Categoría', 'Ingreso', 'Egreso']], body });
-                    finalY = doc.autoTable.previous.finalY;
+                if (generalSummary.egresos.length > 0) {
+                    doc.setFontSize(12);
+                    doc.text("Egresos Generales", 14, finalY);
+                    const body = generalSummary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 10;
+                }
+                
+                doc.setFontSize(14);
+                doc.text("Resumen Banco", 14, finalY);
+                finalY += 10;
+
+                if (bancoSummary.ingresos.length > 0) {
+                    doc.setFontSize(12);
+                    doc.text("Ingresos Banco", 14, finalY);
+                    const body = bancoSummary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 10;
                 }
 
-                finalY += 15;
+                if (bancoSummary.egresos.length > 0) {
+                    doc.setFontSize(12);
+                    doc.text("Egresos Banco", 14, finalY);
+                    const body = bancoSummary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 15;
+                }
+
+                totalIngresos = generalSummary.ingresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.ingresos.reduce((sum, i) => sum + i.monto, 0);
+                totalEgresos = generalSummary.egresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.egresos.reduce((sum, i) => sum + i.monto, 0);
+
                 doc.setFontSize(12);
                 doc.text(`Total Ingresos: ${this.formatCurrency(totalIngresos)}`, 14, finalY);
                 doc.text(`Total Egresos: ${this.formatCurrency(totalEgresos)}`, 14, finalY + 7);
                 doc.setFontSize(14);
                 doc.text(`Saldo Final: ${this.formatCurrency(totalIngresos - totalEgresos)}`, 14, finalY + 14);
 
-                doc.save(`Balance_Parroquial_${startDate}_a_${endDate}.pdf`);
+                const filename = withDateInFilename ? `Balance_Parroquial_${startDate}_a_${endDate}.pdf` : 'Balance_Parroquial.pdf';
+                doc.save(filename);
             },
 
-            downloadBalanceExcel() {
+            generateSummarizedBalanceExcel() {
                 const startDate = this.dom.balanceStartDate.value;
                 const endDate = this.dom.balanceEndDate.value;
                 if (!startDate || !endDate) {
@@ -2107,86 +2256,48 @@
 
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                
+                const generalSummary = this.summarizeTransactionsByCategory(generalInRange);
+                const bancoSummary = this.summarizeTransactionsByCategory(bancoInRange);
 
-                const allTransactions = [
-                    ...generalInRange.map(t => ({ ...t, registro: 'General' })),
-                    ...bancoInRange.map(t => ({ ...t, registro: 'Banco' }))
-                ].sort((a, b) => a.fecha.localeCompare(b.fecha));
+                let dataForSheet = [];
 
-                if (allTransactions.length === 0) {
-                    this.showToast("No hay datos para exportar en el rango seleccionado.", "error");
-                    return;
-                }
+                dataForSheet.push({ A: "BALANCE RESUMIDO POR CATEGORÍA" });
+                dataForSheet.push({ A: `Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}` });
+                dataForSheet.push({}); // Spacer
 
-                const dataForSheet = allTransactions.map(t => ({
-                    'Tipo de Registro': t.registro,
-                    'Fecha': this.formatDate(t.fecha),
-                    'Categoría': t.categoria,
-                    'Descripción': t.descripcion || '',
-                    'Ingreso': t.type === 'ingreso' ? t.monto : 0,
-                    'Egreso': t.type === 'egreso' ? t.monto : 0
-                }));
+                dataForSheet.push({ A: "INGRESOS GENERALES", B: "MONTO" });
+                generalSummary.ingresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                dataForSheet.push({}); // Spacer
 
-                const totalIngresos = dataForSheet.reduce((sum, t) => sum + t.Ingreso, 0);
-                const totalEgresos = dataForSheet.reduce((sum, t) => sum + t.Egreso, 0);
-                const saldoFinal = totalIngresos - totalEgresos;
+                dataForSheet.push({ A: "EGRESOS GENERALES", B: "MONTO" });
+                generalSummary.egresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                dataForSheet.push({}); // Spacer
+                
+                dataForSheet.push({ A: "INGRESOS BANCO", B: "MONTO" });
+                bancoSummary.ingresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                dataForSheet.push({}); // Spacer
+                
+                dataForSheet.push({ A: "EGRESOS BANCO", B: "MONTO" });
+                bancoSummary.egresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                dataForSheet.push({}); // Spacer
 
-                dataForSheet.push({}); // Spacer row
-                dataForSheet.push({ 'Descripción': 'Total Ingresos', 'Ingreso': totalIngresos });
-                dataForSheet.push({ 'Descripción': 'Total Egresos', 'Egreso': totalEgresos });
-                dataForSheet.push({ 'Descripción': 'Saldo Final', 'Ingreso': saldoFinal });
+                const totalIngresos = generalSummary.ingresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.ingresos.reduce((sum, i) => sum + i.monto, 0);
+                const totalEgresos = generalSummary.egresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.egresos.reduce((sum, i) => sum + i.monto, 0);
 
-                const worksheet = XLSX.utils.json_to_sheet(dataForSheet);
+                dataForSheet.push({ A: "TOTAL INGRESOS", B: totalIngresos });
+                dataForSheet.push({ A: "TOTAL EGRESOS", B: totalEgresos });
+                dataForSheet.push({ A: "SALDO FINAL", B: totalIngresos - totalEgresos });
+
+                const worksheet = XLSX.utils.json_to_sheet(dataForSheet, { skipHeader: true });
                 const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Balance");
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Balance Resumido");
 
-                // Formatting
-                worksheet['!cols'] = [ {wch:15}, {wch:12}, {wch:25}, {wch:30}, {wch:15}, {wch:15} ];
+                worksheet['!cols'] = [ {wch:40}, {wch:20} ];
 
-                XLSX.writeFile(workbook, `Balance_Parroquial_${startDate}_a_${endDate}.xlsx`);
+                XLSX.writeFile(workbook, `Balance_Resumido_${startDate}_a_${endDate}.xlsx`);
             },
-
-            // --- UTILITIES ---
-            toggleLoader(show) {
-                this.dom.loader.classList.toggle('hidden', !show);
-            },
-
-            showToast(message, type = 'success') {
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = message;
-                this.dom.toastContainer.appendChild(toast);
-                setTimeout(() => toast.remove(), 5000);
-            },
-
-            handleConnectionChange(isOnline) {
-                this.state.isOnline = isOnline;
-                const banner = this.dom.connectionStatus;
-                const text = this.dom.connectionStatusText;
-
-                banner.classList.remove('bg-red-600', 'bg-yellow-500', 'bg-green-600');
-
-                if (!isOnline) {
-                    banner.classList.add('bg-red-600');
-                    text.textContent = "Está trabajando sin conexión. Los datos se guardarán cuando recupere la conexión.";
-                    banner.classList.remove('hidden');
-                    banner.classList.add('show');
-                } else {
-                    banner.classList.add('bg-yellow-500');
-                    text.textContent = "Conexión recuperada. Sincronizando datos...";
-                    banner.classList.add('show');
-
-                    setTimeout(() => {
-                        banner.classList.remove('bg-yellow-500');
-                        banner.classList.add('bg-green-600');
-                        text.textContent = "¡Conexión recuperada! Sus datos están guardados en la nube.";
-                        setTimeout(() => {
-                            banner.classList.remove('show');
-                        }, 4000);
-                    }, 2000);
-                }
-            },
-
+            
             downloadDateRangePDF() {
                 const startDate = this.dom.startDateFilter.value;
                 const endDate = this.dom.endDateFilter.value;
@@ -2557,12 +2668,15 @@
                         const month = monthMap[monthPart];
                         let year = today.getFullYear();
                         
-                        // If the colecta's month is earlier than today's month, assume it's for next year.
-                        if (month < today.getMonth()) {
-                            year += 1;
-                        }
+                        // *** BUG FIX STARTS HERE ***
+                        let colectaDate = new Date(year, month, day);
+                        colectaDate.setHours(0,0,0,0); // Normalize time for accurate comparison
 
-                        const colectaDate = new Date(year, month, day);
+                        // If the calculated date for this year has already passed, set it for next year.
+                        if (colectaDate < today) {
+                            colectaDate.setFullYear(year + 1);
+                        }
+                        // *** BUG FIX ENDS HERE ***
                         
                         const timeDiff = colectaDate.getTime() - today.getTime();
                         const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
