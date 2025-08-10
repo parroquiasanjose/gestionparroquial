@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -585,6 +586,31 @@
             </form>
         </div>
     </div>
+    <!-- MODAL PARA EDITAR TRANSACCIÓN TEMPORAL -->
+    <div id="edit-temp-transaction-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-auto">
+            <h3 id="edit-temp-transaction-title" class="text-2xl font-bold mb-6 text-center">Editar Registro</h3>
+            <form id="edit-temp-transaction-form" class="space-y-4">
+                <input type="hidden" id="edit-temp-transaction-id">
+                <div>
+                    <label for="edit-temp-transaction-categoria" class="block text-sm font-medium">Categoría</label>
+                    <select id="edit-temp-transaction-categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></select>
+                </div>
+                <div>
+                    <label for="edit-temp-transaction-descripcion" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="edit-temp-transaction-descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></textarea>
+                </div>
+                <div>
+                    <label for="edit-temp-transaction-monto" class="block text-sm font-medium">Monto</label>
+                    <input type="number" id="edit-temp-transaction-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="edit-temp-transaction-cancel-btn" class="btn-gradient bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-2 px-6 rounded-lg">Volver</button>
+                    <button type="button" id="edit-temp-transaction-save-btn" class="btn-gradient bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-bold py-2 px-6 rounded-lg">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- LOGIC -->
     <script type="module">
@@ -600,7 +626,6 @@
                 db: null,
                 auth: null,
                 userId: null,
-                sharedUserId: "parroquia-san-jose-shared-data", // Shared ID for all admins
                 isOnline: true,
                 isAuthenticated: false,
                 currentView: 'main-view',
@@ -683,9 +708,8 @@
                     egresoMonto: document.getElementById('egreso-monto'),
                     addIngresoBtn: document.getElementById('add-ingreso-btn'),
                     addEgresoBtn: document.getElementById('add-egreso-btn'),
-                    addedTransactionsSummary: document.getElementById('added-transactions-summary'),
-                    addedTransactionsList: document.getElementById('added-transactions-list'),
                     saveAllBtn: document.getElementById('save-all-btn'),
+                    addedTransactionsList: document.getElementById('added-transactions-list'),
                     historyGeneralContainer: document.getElementById('history-general-container'),
                     historyBancoContainer: document.getElementById('history-banco-container'),
                     searchGeneralInput: document.getElementById('search-general-input'),
@@ -778,6 +802,16 @@
                     editReminderDate: document.getElementById('edit-reminder-date'),
                     editReminderSaveBtn: document.getElementById('edit-reminder-save-btn'),
                     editReminderCancelBtn: document.getElementById('edit-reminder-cancel-btn'),
+                    // Edit Temp Transaction Modal
+                    editTempTransactionModal: document.getElementById('edit-temp-transaction-modal'),
+                    editTempTransactionTitle: document.getElementById('edit-temp-transaction-title'),
+                    editTempTransactionForm: document.getElementById('edit-temp-transaction-form'),
+                    editTempTransactionId: document.getElementById('edit-temp-transaction-id'),
+                    editTempTransactionCategoria: document.getElementById('edit-temp-transaction-categoria'),
+                    editTempTransactionDescripcion: document.getElementById('edit-temp-transaction-descripcion'),
+                    editTempTransactionMonto: document.getElementById('edit-temp-transaction-monto'),
+                    editTempTransactionSaveBtn: document.getElementById('edit-temp-transaction-save-btn'),
+                    editTempTransactionCancelBtn: document.getElementById('edit-temp-transaction-cancel-btn'),
                     // Connection Status
                     connectionStatus: document.getElementById('connection-status'),
                     connectionStatusText: document.getElementById('connection-status-text'),
@@ -835,34 +869,28 @@
                         appId: "1:710289559218:web:26bf19a750914deb3a83ab"
                       };
 
-                try {
-                    const app = initializeApp(firebaseConfig);
+                const initializeServices = (app) => {
                     this.state.db = getFirestore(app);
-                    
-                    await enableIndexedDbPersistence(this.state.db);
-                    console.log("Firebase persistence enabled.");
-
                     this.state.auth = getAuth(app);
                     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                     this.handleAuthentication(initialAuthToken);
+                };
 
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    await enableIndexedDbPersistence(getFirestore(app));
+                    console.log("Firebase persistence enabled.");
+                    initializeServices(app);
                 } catch (error) {
+                    console.warn("Firebase persistence error:", error.code);
                     if (error.code == 'failed-precondition') {
-                        console.warn("Persistence failed, likely due to multiple open tabs. App will work online.");
-                        this.showToast("La persistencia offline no se pudo activar (posiblemente por tener múltiples pestañas abiertas).", "error");
+                        this.showToast("La persistencia offline no se pudo activar (múltiples pestañas abiertas).", "error");
                     } else if (error.code == 'unimplemented') {
-                        console.warn("Persistence not supported in this browser.");
                         this.showToast("Su navegador no soporta la funcionalidad offline.", "error");
-                    } else {
-                         console.error("Error initializing Firebase:", error);
-                         this.showToast("Error al conectar con la base de datos.", "error");
                     }
                     // Fallback to online-only mode
                     const app = initializeApp(firebaseConfig);
-                    this.state.db = getFirestore(app);
-                    this.state.auth = getAuth(app);
-                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                    this.handleAuthentication(initialAuthToken);
+                    initializeServices(app);
                 }
             },
 
@@ -872,7 +900,7 @@
                     if (user) {
                         // User is signed in.
                         if (!this.state.userId) { // Check to prevent re-running on token refresh
-                            this.state.userId = user.uid; // Still useful for security rules
+                            this.state.userId = user.uid;
                             console.log("User authenticated with UID:", this.state.userId);
                             this.setupRealtimeListeners();
                         }
@@ -1028,6 +1056,10 @@
                 // Edit Transaction Modal Buttons
                 this.dom.editTransactionSaveBtn.addEventListener('click', () => this.handleUpdateTransaction());
                 this.dom.editTransactionCancelBtn.addEventListener('click', () => this.dom.editTransactionModal.classList.add('hidden'));
+                
+                // Edit Temp Transaction Modal Buttons
+                this.dom.editTempTransactionSaveBtn.addEventListener('click', () => this.handleUpdateTempTransaction());
+                this.dom.editTempTransactionCancelBtn.addEventListener('click', () => this.dom.editTempTransactionModal.classList.add('hidden'));
 
                 // Collections view event delegation
                 this.dom.envioColectasList.addEventListener('click', e => {
@@ -1091,6 +1123,18 @@
                 });
                 this.dom.editReminderSaveBtn.addEventListener('click', () => this.handleUpdateReminder());
                 this.dom.editReminderCancelBtn.addEventListener('click', () => this.dom.editReminderModal.classList.add('hidden'));
+
+                // Data Entry List Delegation (for deleting temporary items)
+                this.dom.addedTransactionsList.addEventListener('click', e => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    const id = parseFloat(button.dataset.id);
+                    if(button.dataset.action === 'delete-temp') {
+                        this.deleteTransactionFromList(id);
+                    } else if (button.dataset.action === 'edit-temp') {
+                        this.showEditTempTransactionModal(id);
+                    }
+                });
             },
 
             // --- DATA HANDLING & FIRESTORE ---
@@ -1624,7 +1668,7 @@
                 }
 
                 const transaction = {
-                    id: Date.now(), // Temporary ID for list management
+                    id: Date.now() + Math.random(), // Temporary unique ID for list management
                     type: type,
                     block: this.state.currentBlock,
                     fecha: fecha,
@@ -1639,6 +1683,12 @@
                 this.showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} añadido a la lista.`, "success");
             },
 
+            deleteTransactionFromList(id) {
+                this.state.currentTransactions = this.state.currentTransactions.filter(t => t.id !== id);
+                this.renderAddedTransactions();
+                this.showToast("Registro eliminado de la lista.", "success");
+            },
+
             renderAddedTransactions() {
                 const list = this.dom.addedTransactionsList;
                 list.innerHTML = '';
@@ -1650,11 +1700,15 @@
                     const item = document.createElement('div');
                     item.className = `flex justify-between items-center p-2 rounded-lg ${t.type === 'ingreso' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`;
                     item.innerHTML = `
-                        <div>
+                        <div class="flex-1">
                             <span class="font-bold">${t.categoria}</span>
                             <span class="text-sm text-gray-600 dark:text-gray-400">${t.descripcion ? ' - ' + t.descripcion : ''}</span>
                         </div>
-                        <span class="font-semibold">${this.formatCurrency(t.monto)}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold">${this.formatCurrency(t.monto)}</span>
+                            <button data-action="edit-temp" data-id="${t.id}" class="text-xs btn-gradient bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 py-1 rounded-md">Editar</button>
+                            <button data-action="delete-temp" data-id="${t.id}" class="text-xs btn-gradient bg-gradient-to-r from-red-500 to-red-600 text-white px-2 py-1 rounded-md">Eliminar</button>
+                        </div>
                     `;
                     list.appendChild(item);
                 });
@@ -1851,6 +1905,50 @@
                     this.toggleLoader(false);
                 }
             },
+            
+            showEditTempTransactionModal(id) {
+                const transaction = this.state.currentTransactions.find(t => t.id === id);
+                if (!transaction) {
+                    this.showToast("No se encontró el registro temporal.", "error");
+                    return;
+                }
+
+                this.dom.editTempTransactionId.value = id;
+                this.dom.editTempTransactionTitle.textContent = `Editar ${transaction.type === 'ingreso' ? 'Ingreso' : 'Egreso'}`;
+                
+                const categories = this.state.categories[transaction.block][transaction.type];
+                this.dom.editTempTransactionCategoria.innerHTML = categories.map(cat => `<option value="${cat.name}" ${cat.name === transaction.categoria ? 'selected' : ''}>${cat.name}</option>`).join('');
+                
+                this.dom.editTempTransactionDescripcion.value = transaction.descripcion;
+                this.dom.editTempTransactionMonto.value = transaction.monto;
+
+                this.dom.editTempTransactionModal.classList.remove('hidden');
+            },
+
+            handleUpdateTempTransaction() {
+                const id = parseFloat(this.dom.editTempTransactionId.value);
+                const categoria = this.dom.editTempTransactionCategoria.value;
+                const descripcion = this.dom.editTempTransactionDescripcion.value;
+                const monto = parseFloat(this.dom.editTempTransactionMonto.value);
+
+                if (isNaN(id) || !categoria || isNaN(monto) || monto <= 0) {
+                    this.showToast("Por favor, complete todos los campos con valores válidos.", "error");
+                    return;
+                }
+
+                const transactionIndex = this.state.currentTransactions.findIndex(t => t.id === id);
+                if (transactionIndex > -1) {
+                    this.state.currentTransactions[transactionIndex].categoria = categoria;
+                    this.state.currentTransactions[transactionIndex].descripcion = descripcion;
+                    this.state.currentTransactions[transactionIndex].monto = monto;
+                    
+                    this.renderAddedTransactions();
+                    this.dom.editTempTransactionModal.classList.add('hidden');
+                    this.showToast("Registro actualizado en la lista.", "success");
+                } else {
+                    this.showToast("No se pudo encontrar el registro para actualizar.", "error");
+                }
+            },
 
             // --- BALANCE LOGIC ---
             generateAndDisplayBalance() {
@@ -2001,7 +2099,7 @@
 
             downloadBalanceExcel() {
                 const startDate = this.dom.balanceStartDate.value;
-                const endDate = this.dom.endDateFilter.value;
+                const endDate = this.dom.balanceEndDate.value;
                 if (!startDate || !endDate) {
                     this.showToast("Por favor, filtra un rango de fechas primero.", "error");
                     return;
@@ -2010,38 +2108,42 @@
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
 
-                let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "Tipo de Registro,Fecha,Categoria,Descripcion,Ingreso,Egreso\r\n";
+                const allTransactions = [
+                    ...generalInRange.map(t => ({ ...t, registro: 'General' })),
+                    ...bancoInRange.map(t => ({ ...t, registro: 'Banco' }))
+                ].sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-                let totalIngresos = 0;
-                let totalEgresos = 0;
+                if (allTransactions.length === 0) {
+                    this.showToast("No hay datos para exportar en el rango seleccionado.", "error");
+                    return;
+                }
 
-                const processTransactions = (label, transactions) => {
-                    transactions.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(t => {
-                        const ingreso = t.type === 'ingreso' ? t.monto : 0;
-                        const egreso = t.type === 'egreso' ? t.monto : 0;
-                        totalIngresos += ingreso;
-                        totalEgresos += egreso;
-                        const row = [label, t.fecha, t.categoria, `"${t.descripcion || ''}"`, ingreso, egreso].join(",");
-                        csvContent += row + "\r\n";
-                    });
-                };
-                
-                processTransactions("General", generalInRange);
-                processTransactions("Banco", bancoInRange);
-                
-                csvContent += "\r\n";
-                csvContent += `,,,Total Ingresos,${totalIngresos}\r\n`;
-                csvContent += `,,,Total Egresos,${totalEgresos}\r\n`;
-                csvContent += `,,,Saldo Final,${totalIngresos - totalEgresos}\r\n`;
+                const dataForSheet = allTransactions.map(t => ({
+                    'Tipo de Registro': t.registro,
+                    'Fecha': this.formatDate(t.fecha),
+                    'Categoría': t.categoria,
+                    'Descripción': t.descripcion || '',
+                    'Ingreso': t.type === 'ingreso' ? t.monto : 0,
+                    'Egreso': t.type === 'egreso' ? t.monto : 0
+                }));
 
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `Balance_Parroquial_${startDate}_a_${endDate}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const totalIngresos = dataForSheet.reduce((sum, t) => sum + t.Ingreso, 0);
+                const totalEgresos = dataForSheet.reduce((sum, t) => sum + t.Egreso, 0);
+                const saldoFinal = totalIngresos - totalEgresos;
+
+                dataForSheet.push({}); // Spacer row
+                dataForSheet.push({ 'Descripción': 'Total Ingresos', 'Ingreso': totalIngresos });
+                dataForSheet.push({ 'Descripción': 'Total Egresos', 'Egreso': totalEgresos });
+                dataForSheet.push({ 'Descripción': 'Saldo Final', 'Ingreso': saldoFinal });
+
+                const worksheet = XLSX.utils.json_to_sheet(dataForSheet);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Balance");
+
+                // Formatting
+                worksheet['!cols'] = [ {wch:15}, {wch:12}, {wch:25}, {wch:30}, {wch:15}, {wch:15} ];
+
+                XLSX.writeFile(workbook, `Balance_Parroquial_${startDate}_a_${endDate}.xlsx`);
             },
 
             // --- UTILITIES ---
@@ -2453,7 +2555,13 @@
                     if (dayPart && monthMap[monthPart] !== undefined) {
                         const day = parseInt(dayPart);
                         const month = monthMap[monthPart];
-                        const year = today.getFullYear();
+                        let year = today.getFullYear();
+                        
+                        // If the colecta's month is earlier than today's month, assume it's for next year.
+                        if (month < today.getMonth()) {
+                            year += 1;
+                        }
+
                         const colectaDate = new Date(year, month, day);
                         
                         const timeDiff = colectaDate.getTime() - today.getTime();
