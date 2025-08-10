@@ -2341,11 +2341,11 @@
 
                 doc.text(title, 14, 20);
                 doc.setFontSize(12);
-                doc.text(`Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 28);
+                // doc.text(`Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 28); // This line is removed as requested
 
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
-                let finalY = 40;
+                let finalY = 30; // Adjusted starting Y position
 
                 const summary = this.summarizeTransactionsByCategory(generalInRange);
 
