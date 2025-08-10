@@ -87,6 +87,22 @@
         #reminders-panel {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
+
+        /* NEW: Animation for highlighting new items */
+        @keyframes highlight-green {
+          from { background-color: #6ee7b7; } /* emerald-300 */
+          to { background-color: #d1fae5; } /* green-100 */
+        }
+        @keyframes highlight-red {
+          from { background-color: #fca5a5; } /* red-300 */
+          to { background-color: #fee2e2; } /* red-100 */
+        }
+        .new-ingreso {
+            animation: highlight-green 1.5s ease-out;
+        }
+        .new-egreso {
+            animation: highlight-red 1.5s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
@@ -1792,6 +1808,7 @@
 
                 const transaction = {
                     id: Date.now() + Math.random(), // Temporary unique ID for list management
+                    isNew: true, // Flag for animation
                     type: type,
                     block: this.state.currentBlock,
                     fecha: fecha,
@@ -1821,7 +1838,10 @@
                 }
                 this.state.currentTransactions.forEach(t => {
                     const item = document.createElement('div');
-                    item.className = `flex justify-between items-center p-2 rounded-lg ${t.type === 'ingreso' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`;
+                    const bgColor = t.type === 'ingreso' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900';
+                    const animationClass = t.isNew ? (t.type === 'ingreso' ? 'new-ingreso' : 'new-egreso') : '';
+                    
+                    item.className = `flex justify-between items-center p-2 rounded-lg ${bgColor} ${animationClass}`;
                     item.innerHTML = `
                         <div class="flex-1">
                             <span class="font-bold">${t.categoria}</span>
@@ -1834,6 +1854,17 @@
                         </div>
                     `;
                     list.appendChild(item);
+
+                    if (t.isNew) {
+                        setTimeout(() => {
+                            const transactionInState = this.state.currentTransactions.find(trans => trans.id === t.id);
+                            if (transactionInState) {
+                                delete transactionInState.isNew;
+                            }
+                            // Remove the class from the DOM element directly to stop re-animation on other renders
+                            item.classList.remove('new-ingreso', 'new-egreso');
+                        }, 1500);
+                    }
                 });
             },
 
@@ -2340,12 +2371,10 @@
                 const title = `Balance de la Parroquia - ${monthNames[start.getMonth()]} ${start.getFullYear()}`;
 
                 doc.text(title, 14, 20);
-                doc.setFontSize(12);
-                // doc.text(`Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 28); // This line is removed as requested
-
+                
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
-                let finalY = 30; // Adjusted starting Y position
+                let finalY = 30;
 
                 const summary = this.summarizeTransactionsByCategory(generalInRange);
 
