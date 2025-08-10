@@ -180,12 +180,12 @@
                 </div>
 
                 <div class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
-                    <h3 class="text-xl font-bold mb-4">Balance</h3>
-                    <button id="balance-btn" class="w-full btn-gradient bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:from-purple-700 hover:to-indigo-700">Ver Balance Completo</button>
+                    <h3 class="text-xl font-bold mb-4">Balances y Reportes</h3>
+                    <button id="balance-btn" class="w-full btn-gradient bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:from-purple-700 hover:to-indigo-700">Ver Balances</button>
                 </div>
 
                  <div class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
-                    <h3 class="text-xl font-bold mb-4">Reporte por Rango</h3>
+                    <h3 class="text-xl font-bold mb-4">Reporte Detallado por Rango</h3>
                     <div class="flex flex-col md:flex-row gap-4 items-center">
                         <input type="date" id="start-date-filter" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
                         <input type="date" id="end-date-filter" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700">
@@ -432,27 +432,48 @@
 
             <!-- BALANCE VIEW -->
             <section id="balance-view" class="view-container hidden max-w-7xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
-                <h2 id="balance-title" class="text-3xl font-bold mb-2 text-center">Balance de la Parroquia San José</h2>
+                <h2 id="balance-title" class="text-3xl font-bold mb-2 text-center">Balances de la Parroquia San José</h2>
                 <p id="balance-date-range" class="text-center text-gray-500 dark:text-gray-400 mb-6"></p>
                 
-                <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg mb-6">
+                <div class="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg mb-8">
                     <div class="flex flex-col md:flex-row gap-4 items-center">
+                        <label for="balance-start-date" class="font-semibold">Desde:</label>
                         <input type="date" id="balance-start-date" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        <label for="balance-end-date" class="font-semibold">Hasta:</label>
                         <input type="date" id="balance-end-date" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
-                        <button id="filter-balance-btn" class="w-full md:w-auto btn-gradient bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800">Buscar</button>
+                        <button id="filter-balance-btn" class="w-full md:w-auto btn-gradient bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800">Filtrar</button>
                     </div>
                 </div>
 
-                <div id="balance-details-container" class="space-y-8">
-                    <!-- Balance details will be injected here -->
+                <!-- Summarized General Balance -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-4 text-center border-b-2 pb-2 border-indigo-500">Balance General Resumido</h3>
+                    <p class="text-center text-sm text-gray-500 dark:text-gray-400 mb-4">(Solo Ingresos y Egresos Generales)</p>
+                    <div id="summary-balance-container">
+                        <!-- Summarized balance will be injected here -->
+                    </div>
+                    <div class="mt-4 flex justify-center gap-4">
+                        <button id="download-summary-pdf-btn" class="btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-red-700 hover:to-red-800">Descargar PDF Resumido</button>
+                        <button id="download-summary-excel-btn" class="btn-gradient bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800">Descargar Excel Resumido</button>
+                    </div>
                 </div>
 
-                <div class="mt-8 pt-6 border-t border-gray-300 dark:border-slate-600 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex gap-4">
-                        <button id="download-balance-pdf-btn" class="btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-red-700 hover:to-red-800">Descargar PDF</button>
-                        <button id="download-balance-excel-btn" class="btn-gradient bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800">Descargar Excel</button>
+                <!-- Detailed Complete Balance -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-center border-b-2 pb-2 border-purple-500">Balance Completo Detallado</h3>
+                     <p class="text-center text-sm text-gray-500 dark:text-gray-400 mb-4">(Incluye Generales y Banco)</p>
+                    <div id="balance-details-container" class="space-y-8">
+                        <!-- Detailed balance will be injected here -->
                     </div>
-                    <button id="back-from-balance-btn" class="w-full md:w-auto btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver</button>
+                    <div class="mt-4 flex justify-center gap-4">
+                        <button id="download-detailed-pdf-btn" class="btn-gradient bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-red-700 hover:to-red-800">Descargar PDF Detallado</button>
+                        <button id="download-detailed-excel-btn" class="btn-gradient bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800">Descargar Excel Detallado</button>
+                    </div>
+                </div>
+
+
+                <div class="mt-12 pt-6 border-t border-gray-300 dark:border-slate-600 flex justify-center">
+                    <button id="back-from-balance-btn" class="w-full md:w-auto btn-gradient bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:from-gray-600 hover:to-gray-700">Volver al Panel Principal</button>
                 </div>
             </section>
         </div>
@@ -747,9 +768,12 @@
                     balanceStartDate: document.getElementById('balance-start-date'),
                     balanceEndDate: document.getElementById('balance-end-date'),
                     filterBalanceBtn: document.getElementById('filter-balance-btn'),
+                    summaryBalanceContainer: document.getElementById('summary-balance-container'),
                     balanceDetailsContainer: document.getElementById('balance-details-container'),
-                    downloadBalancePdfBtn: document.getElementById('download-balance-pdf-btn'),
-                    downloadBalanceExcelBtn: document.getElementById('download-balance-excel-btn'),
+                    downloadSummaryPdfBtn: document.getElementById('download-summary-pdf-btn'),
+                    downloadSummaryExcelBtn: document.getElementById('download-summary-excel-btn'),
+                    downloadDetailedPdfBtn: document.getElementById('download-detailed-pdf-btn'),
+                    downloadDetailedExcelBtn: document.getElementById('download-detailed-excel-btn'),
                     // Aportes Spans
                     sueldo_camila: document.getElementById('sueldo_camila'),
                     sueldo_julio: document.getElementById('sueldo_julio'),
@@ -1053,8 +1077,11 @@
 
                 // Balance view buttons
                 this.dom.filterBalanceBtn.addEventListener('click', this.generateAndDisplayBalance);
-                this.dom.downloadBalancePdfBtn.addEventListener('click', this.showPdfConfirmModal);
-                this.dom.downloadBalanceExcelBtn.addEventListener('click', this.generateSummarizedBalanceExcel);
+                this.dom.downloadSummaryPdfBtn.addEventListener('click', this.generateGeneralSummaryPDF);
+                this.dom.downloadSummaryExcelBtn.addEventListener('click', this.generateGeneralSummaryExcel);
+                this.dom.downloadDetailedPdfBtn.addEventListener('click', () => this.generateCompleteBalancePDF(true));
+                this.dom.downloadDetailedExcelBtn.addEventListener('click', this.generateCompleteBalanceExcel);
+
 
                 // Form view buttons
                 this.dom.addIngresoBtn.addEventListener('click', () => this.addTransactionToList('ingreso'));
@@ -1070,8 +1097,8 @@
                 this.dom.saveConfirmCancel.addEventListener('click', () => this.dom.saveConfirmModal.classList.add('hidden'));
                 this.dom.confirmModalOk.addEventListener('click', this.handleConfirm);
                 this.dom.confirmModalCancel.addEventListener('click', () => this.dom.confirmModal.classList.add('hidden'));
-                this.dom.pdfConfirmYes.addEventListener('click', () => this.generateSummarizedBalancePDF(true));
-                this.dom.pdfConfirmNo.addEventListener('click', () => this.generateSummarizedBalancePDF(false));
+                this.dom.pdfConfirmYes.addEventListener('click', () => this.generateCompleteBalancePDF(true));
+                this.dom.pdfConfirmNo.addEventListener('click', () => this.generateCompleteBalancePDF(false));
                 this.dom.pdfConfirmCancel.addEventListener('click', () => this.dom.pdfConfirmModal.classList.add('hidden'));
 
                 // Edit Colecta Modal Buttons
@@ -2056,13 +2083,19 @@
                 }
                 this.dom.balanceDateRange.textContent = `del ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`;
 
+                // Render both balances on screen
+                this.renderDetailedBalance(startDate, endDate);
+                this.renderSummaryBalance(startDate, endDate);
+            },
+
+            renderDetailedBalance(startDate, endDate) {
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
-                this.dom.balanceDetailsContainer.innerHTML = ''; // Clear previous balance
+                this.dom.balanceDetailsContainer.innerHTML = ''; 
 
                 if (generalInRange.length === 0 && bancoInRange.length === 0) {
-                    this.dom.balanceDetailsContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros para el balance en el rango seleccionado.</p>';
+                    this.dom.balanceDetailsContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros detallados en el rango seleccionado.</p>';
                     return;
                 }
 
@@ -2088,51 +2121,93 @@
                 let html = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            ${this.renderBalanceTable('Ingresos y Egresos Generales', balanceData.general.transacciones, balanceData.general.ingresos, balanceData.general.egresos)}
+                            ${this.renderBalanceTable('Ingresos y Egresos Generales (Detallado)', balanceData.general.transacciones, balanceData.general.ingresos, balanceData.general.egresos)}
                         </div>
                         <div>
-                            ${this.renderBalanceTable('Movimientos de Banco', balanceData.banco.transacciones, balanceData.banco.ingresos, balanceData.banco.egresos)}
+                            ${this.renderBalanceTable('Movimientos de Banco (Detallado)', balanceData.banco.transacciones, balanceData.banco.ingresos, balanceData.banco.egresos)}
                         </div>
                     </div>
                     <div class="mt-8 pt-6 border-t-2 border-gray-300 dark:border-slate-600 text-right font-bold text-xl">
-                        <p class="mb-2">Total Ingresos: <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></p>
-                        <p class="mb-2">Total Egresos: <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></p>
-                        <p class="text-2xl">Saldo Final: <span class="${saldoFinal >= 0 ? 'text-green-600' : 'text-red-600'}">${this.formatCurrency(saldoFinal)}</span></p>
+                        <p class="mb-2">Total Ingresos (Completo): <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></p>
+                        <p class="mb-2">Total Egresos (Completo): <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></p>
+                        <p class="text-2xl">Saldo Final (Completo): <span class="${saldoFinal >= 0 ? 'text-green-600' : 'text-red-600'}">${this.formatCurrency(saldoFinal)}</span></p>
                     </div>
                 `;
 
                 this.dom.balanceDetailsContainer.innerHTML = html;
             },
 
-            renderBalanceTable(title, transactions, totalIngresos, totalEgresos) {
-                let rowsHtml = transactions.length > 0 ? transactions.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => `
-                    <tr class="border-b border-gray-200 dark:border-slate-700">
-                        <td class="py-2 px-3">${this.formatDate(t.fecha)}</td>
-                        <td class="py-2 px-3">${t.categoria}</td>
-                        <td class="py-2 px-3 text-right">${t.type === 'ingreso' ? this.formatCurrency(t.monto) : '-'}</td>
-                        <td class="py-2 px-3 text-right">${t.type === 'egreso' ? this.formatCurrency(t.monto) : '-'}</td>
-                    </tr>
-                `).join('') : '<tr><td colspan="4" class="text-center py-4">No hay movimientos</td></tr>';
+            renderSummaryBalance(startDate, endDate) {
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                this.dom.summaryBalanceContainer.innerHTML = '';
+                
+                if (generalInRange.length === 0) {
+                    this.dom.summaryBalanceContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros generales en el rango seleccionado.</p>';
+                    return;
+                }
+
+                const summary = this.summarizeTransactionsByCategory(generalInRange);
+                const totalIngresos = summary.ingresos.reduce((sum, item) => sum + item.monto, 0);
+                const totalEgresos = summary.egresos.reduce((sum, item) => sum + item.monto, 0);
+                const saldoFinal = totalIngresos - totalEgresos;
+
+                let html = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            ${this.renderBalanceTable('Ingresos Generales (Resumido)', summary.ingresos, totalIngresos, 0, true)}
+                        </div>
+                        <div>
+                            ${this.renderBalanceTable('Egresos Generales (Resumido)', summary.egresos, 0, totalEgresos, true)}
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t-2 border-gray-300 dark:border-slate-600 text-right font-bold text-xl">
+                        <p class="mb-2">Total Ingresos (General): <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></p>
+                        <p class="mb-2">Total Egresos (General): <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></p>
+                        <p class="text-2xl">Saldo Final (General): <span class="${saldoFinal >= 0 ? 'text-green-600' : 'text-red-600'}">${this.formatCurrency(saldoFinal)}</span></p>
+                    </div>
+                `;
+                this.dom.summaryBalanceContainer.innerHTML = html;
+            },
+
+            renderBalanceTable(title, transactions, totalIngresos, totalEgresos, isSummary = false) {
+                let rowsHtml;
+                if (isSummary) {
+                    rowsHtml = transactions.length > 0 ? transactions.map(t => `
+                        <tr class="border-b border-gray-200 dark:border-slate-700">
+                            <td class="py-2 px-3">${t.categoria}</td>
+                            <td class="py-2 px-3 text-right">${this.formatCurrency(t.monto)}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="2" class="text-center py-4">No hay movimientos</td></tr>';
+                } else {
+                    rowsHtml = transactions.length > 0 ? transactions.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => `
+                        <tr class="border-b border-gray-200 dark:border-slate-700">
+                            <td class="py-2 px-3">${this.formatDate(t.fecha)}</td>
+                            <td class="py-2 px-3">${t.categoria}</td>
+                            <td class="py-2 px-3 text-right">${t.type === 'ingreso' ? this.formatCurrency(t.monto) : '-'}</td>
+                            <td class="py-2 px-3 text-right">${t.type === 'egreso' ? this.formatCurrency(t.monto) : '-'}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="4" class="text-center py-4">No hay movimientos</td></tr>';
+                }
+
+                const headerHtml = isSummary 
+                    ? `<th class="py-2 px-3 text-left">Categoría</th><th class="py-2 px-3 text-right">Monto</th>`
+                    : `<th class="py-2 px-3 text-left">Fecha</th><th class="py-2 px-3 text-left">Categoría</th><th class="py-2 px-3 text-right">Ingreso</th><th class="py-2 px-3 text-right">Egreso</th>`;
+
+                const footerHtml = isSummary 
+                    ? `<div class="mt-4 p-3 bg-gray-100 dark:bg-slate-600 rounded-lg flex justify-end font-semibold"><span>Subtotal: <span class="${totalIngresos > 0 ? 'text-green-500' : 'text-red-500'}">${this.formatCurrency(totalIngresos || totalEgresos)}</span></span></div>`
+                    : `<div class="mt-4 p-3 bg-gray-100 dark:bg-slate-600 rounded-lg flex justify-between font-semibold"><span>Subtotal Ingresos: <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></span><span>Subtotal Egresos: <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></span></div>`;
 
                 return `
                     <h3 class="text-xl font-semibold mb-3">${title}</h3>
                     <div class="overflow-auto max-h-96 rounded-lg shadow">
                         <table class="min-w-full bg-white dark:bg-slate-700">
                             <thead class="bg-gray-200 dark:bg-slate-600 sticky top-0">
-                                <tr>
-                                    <th class="py-2 px-3 text-left">Fecha</th>
-                                    <th class="py-2 px-3 text-left">Categoría</th>
-                                    <th class="py-2 px-3 text-right">Ingreso</th>
-                                    <th class="py-2 px-3 text-right">Egreso</th>
-                                </tr>
+                                <tr>${headerHtml}</tr>
                             </thead>
                             <tbody>${rowsHtml}</tbody>
                         </table>
                     </div>
-                    <div class="mt-4 p-3 bg-gray-100 dark:bg-slate-600 rounded-lg flex justify-between font-semibold">
-                        <span>Subtotal Ingresos: <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></span>
-                        <span>Subtotal Egresos: <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></span>
-                    </div>
+                    ${footerHtml}
                 `;
             },
 
@@ -2167,7 +2242,7 @@
                 };
             },
 
-            generateSummarizedBalancePDF(withDateInFilename) {
+            generateCompleteBalancePDF(withDateInFilename) {
                 this.dom.pdfConfirmModal.classList.add('hidden');
                 const startDate = this.dom.balanceStartDate.value;
                 const endDate = this.dom.balanceEndDate.value;
@@ -2179,62 +2254,35 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                doc.text(`Balance de la Parroquia San José`, 14, 20);
+                doc.text(`Balance Completo y Detallado - Parroquia San José`, 14, 20);
                 doc.setFontSize(12);
                 doc.text(`Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 28);
 
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
 
-                let finalY = 40;
-                let totalIngresos = 0;
-                let totalEgresos = 0;
+                let finalY = 35;
 
-                const generalSummary = this.summarizeTransactionsByCategory(generalInRange);
-                const bancoSummary = this.summarizeTransactionsByCategory(bancoInRange);
-
-                doc.setFontSize(14);
-                doc.text("Resumen General", 14, finalY);
-                finalY += 10;
-
-                if (generalSummary.ingresos.length > 0) {
-                    doc.setFontSize(12);
-                    doc.text("Ingresos Generales", 14, finalY);
-                    const body = generalSummary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
-                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                if (generalInRange.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text("Ingresos y Egresos Generales", 14, finalY);
+                    finalY += 5;
+                    const body = generalInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => [this.formatDate(t.fecha), t.categoria, t.descripcion || '-', t.type, this.formatCurrency(t.monto)]);
+                    doc.autoTable({ startY: finalY, head: [['Fecha', 'Categoría', 'Descripción', 'Tipo', 'Monto']], body });
                     finalY = doc.autoTable.previous.finalY + 10;
                 }
 
-                if (generalSummary.egresos.length > 0) {
-                    doc.setFontSize(12);
-                    doc.text("Egresos Generales", 14, finalY);
-                    const body = generalSummary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
-                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
-                    finalY = doc.autoTable.previous.finalY + 10;
-                }
-                
-                doc.setFontSize(14);
-                doc.text("Resumen Banco", 14, finalY);
-                finalY += 10;
-
-                if (bancoSummary.ingresos.length > 0) {
-                    doc.setFontSize(12);
-                    doc.text("Ingresos Banco", 14, finalY);
-                    const body = bancoSummary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
-                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
-                    finalY = doc.autoTable.previous.finalY + 10;
-                }
-
-                if (bancoSummary.egresos.length > 0) {
-                    doc.setFontSize(12);
-                    doc.text("Egresos Banco", 14, finalY);
-                    const body = bancoSummary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
-                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                if (bancoInRange.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text("Movimientos de Banco", 14, finalY);
+                    finalY += 5;
+                    const body = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => [this.formatDate(t.fecha), t.categoria, t.descripcion || '-', t.type, this.formatCurrency(t.monto)]);
+                    doc.autoTable({ startY: finalY, head: [['Fecha', 'Categoría', 'Descripción', 'Tipo', 'Monto']], body });
                     finalY = doc.autoTable.previous.finalY + 15;
                 }
 
-                totalIngresos = generalSummary.ingresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.ingresos.reduce((sum, i) => sum + i.monto, 0);
-                totalEgresos = generalSummary.egresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.egresos.reduce((sum, i) => sum + i.monto, 0);
+                const totalIngresos = generalInRange.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.monto,0) + bancoInRange.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.monto,0);
+                const totalEgresos = generalInRange.filter(t=>t.type==='egreso').reduce((s,t)=>s+t.monto,0) + bancoInRange.filter(t=>t.type==='egreso').reduce((s,t)=>s+t.monto,0);
 
                 doc.setFontSize(12);
                 doc.text(`Total Ingresos: ${this.formatCurrency(totalIngresos)}`, 14, finalY);
@@ -2242,12 +2290,12 @@
                 doc.setFontSize(14);
                 doc.text(`Saldo Final: ${this.formatCurrency(totalIngresos - totalEgresos)}`, 14, finalY + 14);
 
-                const filename = withDateInFilename ? `Balance_Parroquial_${startDate}_a_${endDate}.pdf` : 'Balance_Parroquial.pdf';
+                const filename = withDateInFilename ? `Balance_Detallado_${startDate}_a_${endDate}.pdf` : 'Balance_Detallado.pdf';
                 doc.save(filename);
             },
 
-            generateSummarizedBalanceExcel() {
-                const startDate = this.dom.balanceStartDate.value;
+            generateCompleteBalanceExcel() {
+                 const startDate = this.dom.balanceStartDate.value;
                 const endDate = this.dom.balanceEndDate.value;
                 if (!startDate || !endDate) {
                     this.showToast("Por favor, filtra un rango de fechas primero.", "error");
@@ -2257,45 +2305,119 @@
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
-                const generalSummary = this.summarizeTransactionsByCategory(generalInRange);
-                const bancoSummary = this.summarizeTransactionsByCategory(bancoInRange);
+                const wb = XLSX.utils.book_new();
+
+                const allTransactions = [...generalInRange, ...bancoInRange].sort((a,b) => a.fecha.localeCompare(b.fecha));
+                const dataForSheet = allTransactions.map(t => ({
+                    Fecha: this.formatDate(t.fecha),
+                    Bloque: t.block === 'general' ? 'General' : 'Banco',
+                    Categoría: t.categoria,
+                    Descripción: t.descripcion || '',
+                    Tipo: t.type,
+                    Monto: t.monto
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dataForSheet);
+                ws['!cols'] = [ {wch:12}, {wch:10}, {wch:30}, {wch:40}, {wch:10}, {wch:15} ];
+                XLSX.utils.book_append_sheet(wb, ws, "Balance Detallado");
+
+                XLSX.writeFile(wb, `Balance_Detallado_${startDate}_a_${endDate}.xlsx`);
+            },
+            
+            generateGeneralSummaryPDF() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, filtra un rango de fechas primero.", "error");
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                const start = new Date(startDate + 'T00:00:00');
+                const title = `Balance de la Parroquia - ${monthNames[start.getMonth()]} ${start.getFullYear()}`;
+
+                doc.text(title, 14, 20);
+                doc.setFontSize(12);
+                doc.text(`Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 28);
+
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                
+                let finalY = 40;
+
+                const summary = this.summarizeTransactionsByCategory(generalInRange);
+
+                if (summary.ingresos.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text("Ingresos Generales", 14, finalY);
+                    const body = summary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 10;
+                }
+
+                if (summary.egresos.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text("Egresos Generales", 14, finalY);
+                    const body = summary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]);
+                    doc.autoTable({ startY: finalY + 2, head: [['Categoría', 'Monto']], body });
+                    finalY = doc.autoTable.previous.finalY + 15;
+                }
+
+                const totalIngresos = summary.ingresos.reduce((sum, i) => sum + i.monto, 0);
+                const totalEgresos = summary.egresos.reduce((sum, i) => sum + i.monto, 0);
+
+                doc.setFontSize(12);
+                doc.text(`Total Ingresos: ${this.formatCurrency(totalIngresos)}`, 14, finalY);
+                doc.text(`Total Egresos: ${this.formatCurrency(totalEgresos)}`, 14, finalY + 7);
+                doc.setFontSize(14);
+                doc.text(`Saldo Final: ${this.formatCurrency(totalIngresos - totalEgresos)}`, 14, finalY + 14);
+
+                doc.save(`Balance_General_Resumido_${startDate}_a_${endDate}.pdf`);
+            },
+
+            generateGeneralSummaryExcel() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, filtra un rango de fechas primero.", "error");
+                    return;
+                }
+
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                const summary = this.summarizeTransactionsByCategory(generalInRange);
 
                 let dataForSheet = [];
+                const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                const start = new Date(startDate + 'T00:00:00');
+                const title = `Balance de la Parroquia - ${monthNames[start.getMonth()]} ${start.getFullYear()}`;
 
-                dataForSheet.push({ A: "BALANCE RESUMIDO POR CATEGORÍA" });
+                dataForSheet.push({ A: title });
                 dataForSheet.push({ A: `Periodo: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}` });
-                dataForSheet.push({}); // Spacer
+                dataForSheet.push({});
 
                 dataForSheet.push({ A: "INGRESOS GENERALES", B: "MONTO" });
-                generalSummary.ingresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
-                dataForSheet.push({}); // Spacer
+                summary.ingresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                const totalIngresos = summary.ingresos.reduce((sum, i) => sum + i.monto, 0);
+                dataForSheet.push({ A: "SUBTOTAL INGRESOS", B: totalIngresos });
+                dataForSheet.push({});
 
                 dataForSheet.push({ A: "EGRESOS GENERALES", B: "MONTO" });
-                generalSummary.egresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
-                dataForSheet.push({}); // Spacer
-                
-                dataForSheet.push({ A: "INGRESOS BANCO", B: "MONTO" });
-                bancoSummary.ingresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
-                dataForSheet.push({}); // Spacer
-                
-                dataForSheet.push({ A: "EGRESOS BANCO", B: "MONTO" });
-                bancoSummary.egresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
-                dataForSheet.push({}); // Spacer
+                summary.egresos.forEach(item => dataForSheet.push({ A: item.categoria, B: item.monto }));
+                const totalEgresos = summary.egresos.reduce((sum, i) => sum + i.monto, 0);
+                dataForSheet.push({ A: "SUBTOTAL EGRESOS", B: totalEgresos });
+                dataForSheet.push({});
 
-                const totalIngresos = generalSummary.ingresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.ingresos.reduce((sum, i) => sum + i.monto, 0);
-                const totalEgresos = generalSummary.egresos.reduce((sum, i) => sum + i.monto, 0) + bancoSummary.egresos.reduce((sum, i) => sum + i.monto, 0);
-
-                dataForSheet.push({ A: "TOTAL INGRESOS", B: totalIngresos });
-                dataForSheet.push({ A: "TOTAL EGRESOS", B: totalEgresos });
                 dataForSheet.push({ A: "SALDO FINAL", B: totalIngresos - totalEgresos });
 
                 const worksheet = XLSX.utils.json_to_sheet(dataForSheet, { skipHeader: true });
                 const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Balance Resumido");
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Balance General Resumido");
 
                 worksheet['!cols'] = [ {wch:40}, {wch:20} ];
 
-                XLSX.writeFile(workbook, `Balance_Resumido_${startDate}_a_${endDate}.xlsx`);
+                XLSX.writeFile(workbook, `Balance_General_Resumido_${startDate}_a_${endDate}.xlsx`);
             },
             
             downloadDateRangePDF() {
@@ -2668,15 +2790,12 @@
                         const month = monthMap[monthPart];
                         let year = today.getFullYear();
                         
-                        // *** BUG FIX STARTS HERE ***
                         let colectaDate = new Date(year, month, day);
-                        colectaDate.setHours(0,0,0,0); // Normalize time for accurate comparison
+                        colectaDate.setHours(0,0,0,0);
 
-                        // If the calculated date for this year has already passed, set it for next year.
                         if (colectaDate < today) {
                             colectaDate.setFullYear(year + 1);
                         }
-                        // *** BUG FIX ENDS HERE ***
                         
                         const timeDiff = colectaDate.getTime() - today.getTime();
                         const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
