@@ -1047,7 +1047,27 @@
                 }
             },
 
-            async saveEnvioMonto(id) { /* ... No changes ... */ },
+            async saveEnvioMonto(id) {
+                const input = document.getElementById(`monto-input-${id}`);
+                const monto = parseFloat(input.value);
+                if (isNaN(monto) || monto <= 0) {
+                    this.showToast("Por favor, ingresa un monto válido.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const collRef = this.getCollectionRef("envio_colectas");
+                    if (!collRef) throw new Error("Collection reference is null");
+                    const docRef = doc(collRef, id);
+                    await updateDoc(docRef, { monto: monto });
+                    this.showToast("Monto guardado.", "success");
+                } catch (error) {
+                    console.error("Error saving monto:", error);
+                    this.showToast("Error al guardar el monto.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
 
             // --- UI RENDERING ---
             renderHistory(block) {
@@ -1143,7 +1163,38 @@
                 }, 10); // A small delay to ensure skeleton renders
             },
             
-            renderEnvioColectas() { /* ... No changes, but button styles will apply ... */ },
+            renderEnvioColectas() {
+                this.dom.envioColectasList.innerHTML = '';
+                let subtotal = 0;
+                this.state.envioColectas.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'p-3 bg-gray-50 dark:bg-slate-700 rounded-lg grid grid-cols-4 gap-4 items-center';
+                    
+                    let montoHtml = '';
+                    if (item.monto !== null) {
+                        montoHtml = `<span class="font-semibold">${this.formatCurrency(item.monto)}</span>`;
+                        subtotal += item.monto;
+                    } else {
+                        montoHtml = `
+                            <div class="flex gap-2">
+                                <input type="number" placeholder="Monto" class="w-full p-1 border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-600" id="monto-input-${item.id}">
+                                <button data-action="save-monto" data-id="${item.id}" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">Guardar</button>
+                            </div>
+                        `;
+                    }
+
+                    itemDiv.innerHTML = `
+                        <div class="font-semibold">${item.fecha}</div>
+                        <div>${item.descripcion}</div>
+                        <div class="text-right col-span-1">${montoHtml}</div>
+                        <div class="text-right">
+                            <button data-action="edit-colecta" data-id="${item.id}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded">Editar</button>
+                        </div>
+                    `;
+                    this.dom.envioColectasList.appendChild(itemDiv);
+                });
+                this.dom.envioSubtotal.textContent = this.formatCurrency(subtotal);
+            },
             
             // --- UI FLOW & VIEWS ---
             switchView(viewId) {
