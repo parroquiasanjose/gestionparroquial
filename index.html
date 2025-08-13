@@ -429,6 +429,7 @@
                         <label for="balance-end-date" class="font-semibold">Hasta:</label>
                         <input type="date" id="balance-end-date" class="flex-1 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                         <button id="filter-balance-btn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition-all">Filtrar</button>
+                        <button id="back-from-balance-filter-btn" class="hidden w-full md:w-auto bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition-all">Volver al Panel</button>
                     </div>
                 </div>
 
@@ -587,6 +588,7 @@
                     backFromCategoriesBtn: document.getElementById('back-from-categories-btn'),
                     backFromRemindersBtn: document.getElementById('back-from-reminders-btn'),
                     backFromColectasOnlineBtn: document.getElementById('back-from-colectas-online-btn'),
+                    backFromBalanceFilterBtn: document.getElementById('back-from-balance-filter-btn'),
                     datePromptTitle: document.getElementById('date-prompt-title'),
                     entryDateInput: document.getElementById('entry-date-input'),
                     continueToFormBtn: document.getElementById('continue-to-form-btn'),
@@ -763,6 +765,7 @@
                 this.dom.manageRemindersBtn.addEventListener('click', this.showRemindersManagementView);
                 this.dom.colectasOnlineBtn.addEventListener('click', this.showColectasOnlineView);
                 this.dom.backFromColectasOnlineBtn.addEventListener('click', this.hideColectasOnlineView);
+                this.dom.backFromBalanceFilterBtn.addEventListener('click', this.showMainView);
                 
                 [this.dom.backFromEnviosBtn, this.dom.backFromAportesBtn, this.dom.backFromBalanceBtn, this.dom.backFromFormBtn, this.dom.backFromDatePromptBtn, this.dom.backFromEditDayBtn, this.dom.backFromCategoriesBtn, this.dom.backFromRemindersBtn].forEach(btn => {
                     btn.addEventListener('click', this.showMainView);
@@ -775,7 +778,7 @@
                 this.dom.filterBalanceBtn.addEventListener('click', this.generateAndDisplayBalance);
                 this.dom.downloadSummaryPdfBtn.addEventListener('click', this.generateGeneralSummaryPDF);
                 this.dom.downloadSummaryExcelBtn.addEventListener('click', this.generateGeneralSummaryExcel);
-                this.dom.downloadDetailedPdfBtn.addEventListener('click', () => this.generateCompleteBalancePDF(true));
+                this.dom.downloadDetailedPdfBtn.addEventListener('click', this.generateCompleteBalancePDF);
                 this.dom.downloadDetailedExcelBtn.addEventListener('click', this.generateCompleteBalanceExcel);
 
                 this.dom.addIngresoBtn.addEventListener('click', () => this.addTransactionToList('ingreso'));
@@ -1357,6 +1360,9 @@
 
                 this.renderDetailedBalance(startDate, endDate);
                 this.renderSummaryBalance(startDate, endDate);
+                
+                this.dom.backFromBalanceFilterBtn.classList.remove('hidden');
+                this.dom.backFromBalanceBtn.classList.add('hidden');
             },
 
             renderSummaryBalance(startDate, endDate) {
@@ -1608,6 +1614,8 @@
                 this.dom.balanceStartDate.value = firstDay;
                 this.dom.balanceEndDate.value = lastDay;
                 this.generateAndDisplayBalance();
+                this.dom.backFromBalanceFilterBtn.classList.add('hidden');
+                this.dom.backFromBalanceBtn.classList.remove('hidden');
             },
             showDatePromptView(block) {
                 this.state.currentBlock = block;
@@ -1896,10 +1904,240 @@
                     egresos: toArray(summary.egreso)
                 };
             },
-            generateCompleteBalancePDF(withDateInFilename) { /* ... */ },
-            generateCompleteBalanceExcel() { /* ... */ },
-            generateGeneralSummaryPDF() { /* ... */ },
-            generateGeneralSummaryExcel() { /* ... */ },
+            generateCompleteBalancePDF() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, selecciona un rango de fechas.", "error");
+                    return;
+                }
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+
+                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                    this.showToast("No hay datos para generar el PDF detallado.", "error");
+                    return;
+                }
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.text("Balance Completo Detallado", 14, 22);
+                doc.setFontSize(11);
+                doc.setTextColor(100);
+                doc.text(`Período: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 30);
+
+                let totalIngresosGeneral = 0;
+                let totalEgresosGeneral = 0;
+                let totalIngresosBanco = 0;
+                let totalEgresosBanco = 0;
+
+                const generalBody = generalInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
+                    if(t.type === 'ingreso') totalIngresosGeneral += t.monto;
+                    else totalEgresosGeneral += t.monto;
+                    return [
+                        this.formatDate(t.fecha),
+                        t.categoria,
+                        t.descripcion || '',
+                        t.type === 'ingreso' ? this.formatCurrency(t.monto) : '',
+                        t.type === 'egreso' ? this.formatCurrency(t.monto) : ''
+                    ];
+                });
+
+                const bancoBody = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
+                    if(t.type === 'ingreso') totalIngresosBanco += t.monto;
+                    else totalEgresosBanco += t.monto;
+                    return [
+                        this.formatDate(t.fecha),
+                        t.categoria,
+                        t.descripcion || '',
+                        t.type === 'ingreso' ? this.formatCurrency(t.monto) : '',
+                        t.type === 'egreso' ? this.formatCurrency(t.monto) : ''
+                    ];
+                });
+
+                if (generalInRange.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text("Movimientos Generales", 14, 40);
+                    doc.autoTable({
+                        startY: 45,
+                        head: [['Fecha', 'Categoría', 'Descripción', 'Ingreso', 'Egreso']],
+                        body: generalBody,
+                        foot: [['', '', 'Subtotales', this.formatCurrency(totalIngresosGeneral), this.formatCurrency(totalEgresosGeneral)]],
+                        theme: 'grid',
+                        headStyles: { fillColor: [67, 56, 202] }, // indigo-600
+                        footStyles: { fillColor: [209, 213, 219], textColor: [0,0,0], fontStyle: 'bold' },
+                    });
+                }
+
+                if (bancoInRange.length > 0) {
+                    const startY = doc.autoTable.previous ? doc.autoTable.previous.finalY + 15 : 40;
+                    doc.setFontSize(14);
+                    doc.text("Movimientos de Banco", 14, startY - 5);
+                    doc.autoTable({
+                        startY: startY,
+                        head: [['Fecha', 'Categoría', 'Descripción', 'Ingreso', 'Egreso']],
+                        body: bancoBody,
+                        foot: [['', '', 'Subtotales', this.formatCurrency(totalIngresosBanco), this.formatCurrency(totalEgresosBanco)]],
+                        theme: 'grid',
+                        headStyles: { fillColor: [22, 163, 74] }, // green-600
+                        footStyles: { fillColor: [209, 213, 219], textColor: [0,0,0], fontStyle: 'bold' },
+                    });
+                }
+
+                const finalY = doc.autoTable.previous.finalY + 15;
+                const totalIngresos = totalIngresosGeneral + totalIngresosBanco;
+                const totalEgresos = totalEgresosGeneral + totalEgresosBanco;
+                const saldoFinal = totalIngresos - totalEgresos;
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Total Ingresos: ${this.formatCurrency(totalIngresos)}`, 14, finalY);
+                doc.text(`Total Egresos: ${this.formatCurrency(totalEgresos)}`, 14, finalY + 7);
+                doc.text(`Saldo Final: ${this.formatCurrency(saldoFinal)}`, 14, finalY + 14);
+
+                doc.save(`Balance_Detallado_${startDate}_${endDate}.pdf`);
+            },
+            generateCompleteBalanceExcel() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, selecciona un rango de fechas.", "error");
+                    return;
+                }
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+
+                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                    this.showToast("No hay datos para generar el Excel detallado.", "error");
+                    return;
+                }
+
+                const workbook = XLSX.utils.book_new();
+
+                if (generalInRange.length > 0) {
+                    const generalData = generalInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => ({
+                        Fecha: this.formatDate(t.fecha),
+                        Categoría: t.categoria,
+                        Descripción: t.descripcion || '',
+                        Ingreso: t.type === 'ingreso' ? t.monto : '',
+                        Egreso: t.type === 'egreso' ? t.monto : ''
+                    }));
+                    const generalSheet = XLSX.utils.json_to_sheet(generalData);
+                    XLSX.utils.book_append_sheet(workbook, generalSheet, 'General');
+                }
+
+                if (bancoInRange.length > 0) {
+                    const bancoData = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => ({
+                        Fecha: this.formatDate(t.fecha),
+                        Categoría: t.categoria,
+                        Descripción: t.descripcion || '',
+                        Ingreso: t.type === 'ingreso' ? t.monto : '',
+                        Egreso: t.type === 'egreso' ? t.monto : ''
+                    }));
+                    const bancoSheet = XLSX.utils.json_to_sheet(bancoData);
+                    XLSX.utils.book_append_sheet(workbook, bancoSheet, 'Banco');
+                }
+
+                XLSX.writeFile(workbook, `Balance_Detallado_${startDate}_${endDate}.xlsx`);
+            },
+            generateGeneralSummaryPDF() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, selecciona un rango de fechas.", "error");
+                    return;
+                }
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                if (generalInRange.length === 0) {
+                    this.showToast("No hay datos generales para generar el PDF.", "error");
+                    return;
+                }
+
+                const summary = this.summarizeTransactionsByCategory(generalInRange);
+                const totalIngresos = summary.ingresos.reduce((sum, item) => sum + item.monto, 0);
+                const totalEgresos = summary.egresos.reduce((sum, item) => sum + item.monto, 0);
+                const saldoFinal = totalIngresos - totalEgresos;
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.text("Balance General Resumido", 14, 22);
+                doc.setFontSize(11);
+                doc.setTextColor(100);
+                doc.text(`Período: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 30);
+
+                if (summary.ingresos.length > 0) {
+                    doc.autoTable({
+                        startY: 40,
+                        head: [['Ingresos por Categoría', 'Monto']],
+                        body: summary.ingresos.map(item => [item.categoria, this.formatCurrency(item.monto)]),
+                        foot: [['Total Ingresos', this.formatCurrency(totalIngresos)]],
+                        theme: 'striped',
+                        headStyles: { fillColor: [22, 163, 74] }, // green-600
+                        footStyles: { fillColor: [209, 213, 219], textColor: [0,0,0], fontStyle: 'bold' },
+                    });
+                }
+
+                if (summary.egresos.length > 0) {
+                    doc.autoTable({
+                        startY: doc.autoTable.previous.finalY + 10,
+                        head: [['Egresos por Categoría', 'Monto']],
+                        body: summary.egresos.map(item => [item.categoria, this.formatCurrency(item.monto)]),
+                        foot: [['Total Egresos', this.formatCurrency(totalEgresos)]],
+                        theme: 'striped',
+                        headStyles: { fillColor: [220, 38, 38] }, // red-600
+                        footStyles: { fillColor: [209, 213, 219], textColor: [0,0,0], fontStyle: 'bold' },
+                    });
+                }
+
+                const finalY = doc.autoTable.previous.finalY + 15;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Saldo Final (General): ${this.formatCurrency(saldoFinal)}`, 14, finalY);
+
+                doc.save(`Balance_General_Resumido_${startDate}_${endDate}.pdf`);
+            },
+            generateGeneralSummaryExcel() {
+                const startDate = this.dom.balanceStartDate.value;
+                const endDate = this.dom.balanceEndDate.value;
+                if (!startDate || !endDate) {
+                    this.showToast("Por favor, selecciona un rango de fechas.", "error");
+                    return;
+                }
+                const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
+                if (generalInRange.length === 0) {
+                    this.showToast("No hay datos generales para generar el Excel.", "error");
+                    return;
+                }
+
+                const summary = this.summarizeTransactionsByCategory(generalInRange);
+                const totalIngresos = summary.ingresos.reduce((sum, item) => sum + item.monto, 0);
+                const totalEgresos = summary.egresos.reduce((sum, item) => sum + item.monto, 0);
+                const saldoFinal = totalIngresos - totalEgresos;
+
+                const worksheetData = [
+                    ["Balance General Resumido"],
+                    [`Período: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`],
+                    [], // Spacer row
+                    ["Ingresos por Categoría", "Monto"],
+                    ...summary.ingresos.map(item => [item.categoria, item.monto]),
+                    ["Total Ingresos", totalIngresos],
+                    [], // Spacer row
+                    ["Egresos por Categoría", "Monto"],
+                    ...summary.egresos.map(item => [item.categoria, item.monto]),
+                    ["Total Egresos", totalEgresos],
+                    [], // Spacer row
+                    ["Saldo Final", saldoFinal]
+                ];
+
+                const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Resumen General');
+                XLSX.writeFile(workbook, `Balance_General_Resumido_${startDate}_${endDate}.xlsx`);
+            },
             downloadDateRangePDF() { /* ... */ },
 
             // --- CATEGORY MANAGEMENT ---
