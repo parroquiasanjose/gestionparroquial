@@ -226,6 +226,13 @@
                             <h2 class="text-2xl font-bold">Información</h2>
                         </div>
                         <div class="flex flex-col gap-4 mb-6 flex-grow justify-center">
+                            <button id="colectas-online-btn" class="bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600/50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                                Colectas
+                            </button>
                             <button id="envios-colectas-btn" class="bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600/50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
                                 Fecha de Envíos de Colectas
@@ -463,6 +470,17 @@
         </div>
     </div>
 
+    <!-- NEW: COLECTAS ONLINE VIEW (FULLSCREEN OVERLAY) -->
+    <section id="colectas-online-view" class="fixed inset-0 z-[1000] bg-gray-100 dark:bg-slate-900 p-6 flex flex-col hidden">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300 dark:border-slate-700">
+            <h2 class="text-3xl font-bold">Colectas</h2>
+            <button id="back-from-colectas-online-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
+        </div>
+        <div class="flex-grow">
+             <iframe id="colectas-iframe" src="https://parroquiasanjose.github.io/Colectas-Parroquia-San-Jose/" class="w-full h-full border-2 border-slate-300 dark:border-slate-700 rounded-lg"></iframe>
+        </div>
+    </section>
+
     <!-- MODALS (with unified design) -->
     <div id="generic-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-[1000] modal-backdrop">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-auto modal-content">
@@ -549,6 +567,7 @@
                     balanceView: document.getElementById('balance-view'),
                     categoryManagementView: document.getElementById('category-management-view'),
                     remindersManagementView: document.getElementById('reminders-management-view'),
+                    colectasOnlineView: document.getElementById('colectas-online-view'),
                     aportesContainer: document.getElementById('aportes-container'),
                     envioColectasList: document.getElementById('envio-colectas-list'),
                     envioSubtotal: document.getElementById('envio-subtotal'),
@@ -557,6 +576,7 @@
                     balanceBtn: document.getElementById('balance-btn'),
                     manageCategoriesBtn: document.getElementById('manage-categories-btn'),
                     manageRemindersBtn: document.getElementById('manage-reminders-btn'),
+                    colectasOnlineBtn: document.getElementById('colectas-online-btn'),
                     backToPanelBtn: document.getElementById('back-to-panel-btn'),
                     backFromEnviosBtn: document.getElementById('back-from-envios-btn'),
                     backFromAportesBtn: document.getElementById('back-from-aportes-btn'),
@@ -566,6 +586,7 @@
                     backFromEditDayBtn: document.getElementById('back-from-edit-day-btn'),
                     backFromCategoriesBtn: document.getElementById('back-from-categories-btn'),
                     backFromRemindersBtn: document.getElementById('back-from-reminders-btn'),
+                    backFromColectasOnlineBtn: document.getElementById('back-from-colectas-online-btn'),
                     datePromptTitle: document.getElementById('date-prompt-title'),
                     entryDateInput: document.getElementById('entry-date-input'),
                     continueToFormBtn: document.getElementById('continue-to-form-btn'),
@@ -619,7 +640,6 @@
                     notificationBadge: document.getElementById('notification-badge'),
                     remindersPanel: document.getElementById('reminders-panel'),
                     remindersList: document.getElementById('reminders-list'),
-                    // FIX: Added missing category containers
                     categoryGeneralIngresoContainer: document.getElementById('category-general-ingreso-container'),
                     categoryGeneralEgresoContainer: document.getElementById('category-general-egreso-container'),
                     categoryBancoIngresoContainer: document.getElementById('category-banco-ingreso-container'),
@@ -697,7 +717,7 @@
                     this.listenToReminders();
                     
                     const lastView = localStorage.getItem('currentParishView');
-                    if (lastView) {
+                    if (lastView && document.getElementById(lastView)) {
                         this.switchView(lastView);
                     } else {
                         this.showMainView();
@@ -741,6 +761,8 @@
                 this.dom.balanceBtn.addEventListener('click', this.showBalanceView);
                 this.dom.manageCategoriesBtn.addEventListener('click', this.showCategoryManagementView);
                 this.dom.manageRemindersBtn.addEventListener('click', this.showRemindersManagementView);
+                this.dom.colectasOnlineBtn.addEventListener('click', this.showColectasOnlineView);
+                this.dom.backFromColectasOnlineBtn.addEventListener('click', this.hideColectasOnlineView);
                 
                 [this.dom.backFromEnviosBtn, this.dom.backFromAportesBtn, this.dom.backFromBalanceBtn, this.dom.backFromFormBtn, this.dom.backFromDatePromptBtn, this.dom.backFromEditDayBtn, this.dom.backFromCategoriesBtn, this.dom.backFromRemindersBtn].forEach(btn => {
                     btn.addEventListener('click', this.showMainView);
@@ -1199,6 +1221,14 @@
             // --- UI FLOW & VIEWS ---
             switchView(viewId) {
                 localStorage.setItem('currentParishView', viewId);
+                
+                if (viewId === 'colectas-online-view') {
+                    this.showColectasOnlineView();
+                    return;
+                }
+                
+                this.hideColectasOnlineView();
+
                 const currentViewEl = document.getElementById(this.state.currentView);
                 if (currentViewEl) {
                     currentViewEl.classList.remove('visible');
@@ -1222,7 +1252,6 @@
                 this.switchView('main-view');
                 this.state.currentTransactions = [];
                 this.state.currentBlock = null;
-                // Refresh history views when returning to main panel
                 this.renderHistory('general');
                 this.renderHistory('banco');
             },
@@ -1590,6 +1619,14 @@
                 const month = String(today.getMonth() + 1).padStart(2, '0');
                 const day = String(today.getDate()).padStart(2, '0');
                 this.dom.entryDateInput.value = `${year}-${month}-${day}`;
+            },
+            showColectasOnlineView() {
+                localStorage.setItem('currentParishView', 'colectas-online-view');
+                this.dom.colectasOnlineView.classList.remove('hidden');
+            },
+            hideColectasOnlineView() {
+                localStorage.setItem('currentParishView', 'main-view');
+                this.dom.colectasOnlineView.classList.add('hidden');
             },
             showDateRangeResults() {
                 const startDate = this.dom.startDateFilter.value;
