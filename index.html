@@ -1816,10 +1816,96 @@
                 }
                 this.showDataEntryView(selectedDate);
             },
-            showEditColectaModal(id) { /* ... Similar modal conversion needed ... */ },
-            handleUpdateColecta() { /* ... */ },
-            handleUpdateAporte() { /* ... */ },
-            showEditAporteModal(key, label) { /* ... Similar modal conversion needed ... */ },
+            showEditColectaModal(id) {
+                const colecta = this.state.envioColectas.find(c => c.id === id);
+                if (!colecta) return;
+
+                this.state.pendingAction = () => this.handleUpdateColecta(id);
+
+                this.showModal({
+                    title: "Editar Colecta",
+                    body: `
+                        <form id="edit-colecta-form" class="space-y-4">
+                            <div>
+                                <label for="edit-colecta-fecha" class="block text-sm font-medium">Fecha</label>
+                                <input type="text" id="edit-colecta-fecha" value="${colecta.fecha}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                            <div>
+                                <label for="edit-colecta-desc" class="block text-sm font-medium">Descripción</label>
+                                <input type="text" id="edit-colecta-desc" value="${colecta.descripcion}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                             <div>
+                                <label for="edit-colecta-monto" class="block text-sm font-medium">Monto</label>
+                                <input type="number" id="edit-colecta-monto" value="${colecta.monto || ''}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                        </form>
+                    `,
+                    buttons: [
+                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                         { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                    ]
+                });
+            },
+            async handleUpdateColecta(id) {
+                const fecha = document.getElementById('edit-colecta-fecha').value;
+                const descripcion = document.getElementById('edit-colecta-desc').value;
+                const montoValue = document.getElementById('edit-colecta-monto').value;
+                const monto = montoValue ? parseFloat(montoValue) : null;
+
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    await updateDoc(docRef, { fecha, descripcion, monto });
+                    this.hideModal();
+                    this.showToast("Colecta actualizada.", "success");
+                } catch (error) {
+                    console.error("Error updating colecta:", error);
+                    this.showToast("Error al actualizar la colecta.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            async handleUpdateAporte() {
+                const key = document.getElementById('edit-aporte-key').value;
+                const newValue = parseFloat(document.getElementById('edit-aporte-value').value);
+
+                if (isNaN(newValue)) {
+                    this.showToast("Por favor, ingrese un valor numérico válido.", "error");
+                    return;
+                }
+
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("configuracion_financiera"), "valores");
+                    await updateDoc(docRef, { [key]: newValue });
+                    this.hideModal();
+                    this.showToast("Valor actualizado.", "success");
+                } catch (error) {
+                    console.error("Error updating aporte:", error);
+                    this.showToast("Error al actualizar el valor.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            showEditAporteModal(key, label) {
+                const currentValue = this.state.aportes[key] || 0;
+                this.state.pendingAction = () => this.handleUpdateAporte();
+
+                this.showModal({
+                    title: `Editar: ${label}`,
+                    body: `
+                        <form id="edit-aporte-form">
+                            <input type="hidden" id="edit-aporte-key" value="${key}">
+                            <label for="edit-aporte-value" class="block text-sm font-medium">Nuevo Valor</label>
+                            <input type="number" id="edit-aporte-value" value="${currentValue}" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        </form>
+                    `,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                    ]
+                });
+            },
             async handleUpdateTransaction() {
                 const id = document.getElementById('edit-transaction-id').value;
                 const block = document.getElementById('edit-transaction-block').value;
@@ -1884,8 +1970,63 @@
                     this.toggleLoader(false);
                 }
             },
-            showEditTempTransactionModal(id) { /* ... Similar modal conversion needed ... */ },
-            handleUpdateTempTransaction() { /* ... */ },
+            showEditTempTransactionModal(id) {
+                const transaction = this.state.currentTransactions.find(t => t.id === id);
+                if (!transaction) return;
+
+                const categories = this.state.categories[transaction.block][transaction.type];
+                const categoryOptions = categories.map(cat => `<option value="${cat.name}" ${cat.name === transaction.categoria ? 'selected' : ''}>${cat.name}</option>`).join('');
+
+                this.state.pendingAction = () => this.handleUpdateTempTransaction(id);
+
+                this.showModal({
+                    title: `Editar ${transaction.type === 'ingreso' ? 'Ingreso' : 'Egreso'} Temporal`,
+                    body: `
+                        <form id="edit-temp-transaction-form" class="space-y-4">
+                            <div>
+                                <label for="edit-temp-categoria" class="block text-sm font-medium">Categoría</label>
+                                <select id="edit-temp-categoria" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">${categoryOptions}</select>
+                            </div>
+                            <div>
+                                <label for="edit-temp-descripcion" class="block text-sm font-medium">Descripción</label>
+                                <textarea id="edit-temp-descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">${transaction.descripcion || ''}</textarea>
+                            </div>
+                            <div>
+                                <label for="edit-temp-monto" class="block text-sm font-medium">Monto</label>
+                                <input type="number" id="edit-temp-monto" required min="0" step="0.01" value="${transaction.monto}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                        </form>
+                    `,
+                    buttons: [
+                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                         { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                    ]
+                });
+            },
+            handleUpdateTempTransaction(id) {
+                const index = this.state.currentTransactions.findIndex(t => t.id === id);
+                if (index === -1) return;
+
+                const categoria = document.getElementById('edit-temp-categoria').value;
+                const descripcion = document.getElementById('edit-temp-descripcion').value;
+                const monto = parseFloat(document.getElementById('edit-temp-monto').value);
+
+                if (!categoria || isNaN(monto) || monto <= 0) {
+                    this.showToast("Por favor, complete los campos con valores válidos.", "error");
+                    return;
+                }
+
+                this.state.currentTransactions[index] = {
+                    ...this.state.currentTransactions[index],
+                    categoria,
+                    descripcion,
+                    monto
+                };
+
+                this.renderAddedTransactions();
+                this.hideModal();
+                this.showToast("Registro temporal actualizado.", "success");
+            },
             summarizeTransactionsByCategory(transactions) {
                 const summary = { ingreso: {}, egreso: {} };
                 transactions.forEach(t => {
@@ -2245,10 +2386,65 @@
                     this.toggleLoader(false);
                 }
             },
-            showEditCategoryModal(id, currentName) { /* ... Similar modal conversion needed ... */ },
-            handleUpdateCategory() { /* ... */ },
-            handleDeleteCategory(id, name) { /* ... Similar modal conversion needed ... */ },
-            async deleteCategory(id) { /* ... */ },
+            showEditCategoryModal(id, currentName) {
+                this.state.pendingAction = () => this.handleUpdateCategory(id);
+                this.showModal({
+                    title: "Editar Categoría",
+                    body: `
+                        <form id="edit-category-form">
+                            <label for="edit-category-name" class="block text-sm font-medium">Nuevo Nombre</label>
+                            <input type="text" id="edit-category-name" value="${currentName}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        </form>
+                    `,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                    ]
+                });
+            },
+            async handleUpdateCategory(id) {
+                const newName = document.getElementById('edit-category-name').value.trim();
+                if (!newName) {
+                    this.showToast("El nombre no puede estar vacío.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("categorias"), id);
+                    await updateDoc(docRef, { name: newName });
+                    this.hideModal();
+                    this.showToast("Categoría actualizada.", "success");
+                } catch (error) {
+                    console.error("Error updating category:", error);
+                    this.showToast("Error al actualizar la categoría.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            handleDeleteCategory(id, name) {
+                this.state.pendingAction = () => this.deleteCategory(id);
+                this.showModal({
+                    title: "Confirmar Eliminación",
+                    body: `<p>¿Estás seguro de que quieres eliminar la categoría "<strong>${name}</strong>"?</p>`,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Eliminar', class: 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); this.hideModal(); } }
+                    ]
+                });
+            },
+            async deleteCategory(id) {
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("categorias"), id);
+                    await deleteDoc(docRef);
+                    this.showToast("Categoría eliminada.", "success");
+                } catch(error) {
+                    console.error("Error deleting category:", error);
+                    this.showToast("Error al eliminar la categoría.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
 
             // --- REMINDERS MANAGEMENT ---
             showRemindersManagementView() {
@@ -2311,10 +2507,76 @@
                     this.toggleLoader(false);
                 }
             },
-            showEditReminderModal(id) { /* ... Similar modal conversion needed ... */ },
-            handleUpdateReminder() { /* ... */ },
-            handleDeleteReminder(id) { /* ... Similar modal conversion needed ... */ },
-            async deleteReminder(id) { /* ... */ },
+            showEditReminderModal(id) {
+                const reminder = this.state.reminders.find(r => r.id === id);
+                if (!reminder) return;
+
+                this.state.pendingAction = () => this.handleUpdateReminder(id);
+
+                this.showModal({
+                    title: "Editar Recordatorio",
+                    body: `
+                        <form id="edit-reminder-form" class="space-y-4">
+                            <div>
+                                <label for="edit-reminder-title" class="block text-sm font-medium">Título</label>
+                                <input type="text" id="edit-reminder-title" value="${reminder.titulo}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                            <div>
+                                <label for="edit-reminder-date" class="block text-sm font-medium">Fecha</label>
+                                <input type="date" id="edit-reminder-date" value="${reminder.fecha}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                        </form>
+                    `,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                    ]
+                });
+            },
+            async handleUpdateReminder(id) {
+                const title = document.getElementById('edit-reminder-title').value.trim();
+                const date = document.getElementById('edit-reminder-date').value;
+                if (!title || !date) {
+                    this.showToast("El título y la fecha no pueden estar vacíos.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("recordatorios"), id);
+                    await updateDoc(docRef, { titulo: title, fecha: date });
+                    this.hideModal();
+                    this.showToast("Recordatorio actualizado.", "success");
+                } catch(error) {
+                    console.error("Error updating reminder:", error);
+                    this.showToast("Error al actualizar el recordatorio.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            handleDeleteReminder(id) {
+                this.state.pendingAction = () => this.deleteReminder(id);
+                this.showModal({
+                    title: "Confirmar Eliminación",
+                    body: `<p>¿Estás seguro de que quieres eliminar este recordatorio?</p>`,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Eliminar', class: 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); this.hideModal(); } }
+                    ]
+                });
+            },
+            async deleteReminder(id) {
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("recordatorios"), id);
+                    await deleteDoc(docRef);
+                    this.showToast("Recordatorio eliminado.", "success");
+                } catch(error) {
+                    console.error("Error deleting reminder:", error);
+                    this.showToast("Error al eliminar el recordatorio.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
 
             // --- NOTIFICATIONS ---
             updateReminders() {
