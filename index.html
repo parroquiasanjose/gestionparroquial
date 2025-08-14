@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- NEW: Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +307,7 @@
                             </div>
                             <div>
                                 <label for="ingreso-monto" class="block text-sm font-medium">Monto</label>
-                                <input type="number" id="ingreso-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                                <input type="text" inputmode="numeric" id="ingreso-monto" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                             </div>
                             <button type="button" id="add-ingreso-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl shadow-lg transition-all">Cargar Otro</button>
                         </form>
@@ -327,7 +326,7 @@
                             </div>
                             <div>
                                 <label for="egreso-monto" class="block text-sm font-medium">Monto</label>
-                                <input type="number" id="egreso-monto" required min="0" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                                <input type="text" inputmode="numeric" id="egreso-monto" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                             </div>
                             <button type="button" id="add-egreso-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl shadow-lg transition-all">Cargar Otro</button>
                         </form>
@@ -855,6 +854,10 @@
                     if(button.dataset.action === 'delete-temp') this.deleteTransactionFromList(id);
                     else if (button.dataset.action === 'edit-temp') this.showEditTempTransactionModal(id);
                 });
+
+                // Add formatting listeners for static inputs
+                this.addFormattingListener(this.dom.ingresoMonto);
+                this.addFormattingListener(this.dom.egresoMonto);
             },
 
             // --- AUTHENTICATION ---
@@ -1074,7 +1077,7 @@
 
             async saveEnvioMonto(id) {
                 const input = document.getElementById(`monto-input-${id}`);
-                const monto = parseFloat(input.value);
+                const monto = this.getNumericValue(input.value);
                 if (isNaN(monto) || monto <= 0) {
                     this.showToast("Por favor, ingresa un monto válido.", "error");
                     return;
@@ -1202,7 +1205,7 @@
                     } else {
                         montoHtml = `
                             <div class="flex gap-2">
-                                <input type="number" placeholder="Monto" class="w-full p-1 border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-600" id="monto-input-${item.id}">
+                                <input type="text" inputmode="numeric" placeholder="Monto" class="w-full p-1 border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-600" id="monto-input-${item.id}">
                                 <button data-action="save-monto" data-id="${item.id}" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">Guardar</button>
                             </div>
                         `;
@@ -1217,6 +1220,11 @@
                         </div>
                     `;
                     this.dom.envioColectasList.appendChild(itemDiv);
+                    // Add listener for dynamically created input
+                    const dynamicInput = document.getElementById(`monto-input-${item.id}`);
+                    if (dynamicInput) {
+                        this.addFormattingListener(dynamicInput);
+                    }
                 });
                 this.dom.envioSubtotal.textContent = this.formatCurrency(subtotal);
             },
@@ -1338,14 +1346,42 @@
             },
 
             formatCurrency(amount) {
-                if (typeof amount !== 'number') return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(0);
-                return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+                if (typeof amount !== 'number') return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(0);
+                return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
             },
 
             formatDate(dateString) {
                 if (!dateString || !dateString.includes('-')) return dateString;
                 const [year, month, day] = dateString.split('-');
                 return `${day}/${month}/${year}`;
+            },
+
+            // --- NEW: NUMBER FORMATTING HELPERS ---
+            formatNumberWithThousands(n) {
+                if (n === null || n === undefined) return '';
+                // Remove existing separators and non-numeric characters
+                const numStr = String(n).replace(/\D/g, '');
+                // Add new separators
+                return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            },
+
+            getNumericValue(formattedValue) {
+                if (typeof formattedValue !== 'string') {
+                    return parseFloat(formattedValue) || 0;
+                }
+                // Remove all dots and parse
+                return parseFloat(formattedValue.replace(/\./g, '')) || 0;
+            },
+            
+            addFormattingListener(element) {
+                if (!element) return;
+                element.addEventListener('input', (e) => {
+                    const originalValue = e.target.value;
+                    const formattedValue = this.formatNumberWithThousands(originalValue);
+                    if (originalValue !== formattedValue) {
+                       e.target.value = formattedValue;
+                    }
+                });
             },
 
             // --- BALANCE & CHART LOGIC ---
@@ -1724,11 +1760,11 @@
                             </div>
                             <div>
                                 <label for="edit-transaction-descripcion" class="block text-sm font-medium">Descripción</label>
-                                <textarea id="edit-transaction-descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">${transaction.descripcion}</textarea>
+                                <textarea id="edit-transaction-descripcion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">${transaction.descripcion || ''}</textarea>
                             </div>
                             <div>
                                 <label for="edit-transaction-monto" class="block text-sm font-medium">Monto</label>
-                                <input type="number" id="edit-transaction-monto" required min="0" step="0.01" value="${transaction.monto}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                                <input type="text" inputmode="numeric" id="edit-transaction-monto" required value="${transaction.monto}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                             </div>
                         </form>
                     `,
@@ -1737,12 +1773,17 @@
                          { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
+                
+                const montoInput = document.getElementById('edit-transaction-monto');
+                this.addFormattingListener(montoInput);
+                montoInput.value = this.formatNumberWithThousands(montoInput.value);
             },
             addTransactionToList(type) {
                 const form = type === 'ingreso' ? this.dom.ingresoForm : this.dom.egresoForm;
                 const categoria = document.getElementById(`${type}-categoria`).value;
                 const descripcion = document.getElementById(`${type}-descripcion`).value;
-                const monto = parseFloat(document.getElementById(`${type}-monto`).value);
+                const montoInput = document.getElementById(`${type}-monto`);
+                const monto = this.getNumericValue(montoInput.value);
                 const fecha = this.dom.sharedDate.value;
 
                 if (!fecha || !categoria || isNaN(monto) || monto <= 0) {
@@ -1836,7 +1877,7 @@
                             </div>
                              <div>
                                 <label for="edit-colecta-monto" class="block text-sm font-medium">Monto</label>
-                                <input type="number" id="edit-colecta-monto" value="${colecta.monto || ''}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                                <input type="text" inputmode="numeric" id="edit-colecta-monto" value="${colecta.monto || ''}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                             </div>
                         </form>
                     `,
@@ -1845,12 +1886,15 @@
                          { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
+                const montoInput = document.getElementById('edit-colecta-monto');
+                this.addFormattingListener(montoInput);
+                montoInput.value = this.formatNumberWithThousands(montoInput.value);
             },
             async handleUpdateColecta(id) {
                 const fecha = document.getElementById('edit-colecta-fecha').value;
                 const descripcion = document.getElementById('edit-colecta-desc').value;
                 const montoValue = document.getElementById('edit-colecta-monto').value;
-                const monto = montoValue ? parseFloat(montoValue) : null;
+                const monto = montoValue ? this.getNumericValue(montoValue) : null;
 
                 this.toggleLoader(true);
                 try {
@@ -1867,7 +1911,7 @@
             },
             async handleUpdateAporte() {
                 const key = document.getElementById('edit-aporte-key').value;
-                const newValue = parseFloat(document.getElementById('edit-aporte-value').value);
+                const newValue = this.getNumericValue(document.getElementById('edit-aporte-value').value);
 
                 if (isNaN(newValue)) {
                     this.showToast("Por favor, ingrese un valor numérico válido.", "error");
@@ -1897,7 +1941,7 @@
                         <form id="edit-aporte-form">
                             <input type="hidden" id="edit-aporte-key" value="${key}">
                             <label for="edit-aporte-value" class="block text-sm font-medium">Nuevo Valor</label>
-                            <input type="number" id="edit-aporte-value" value="${currentValue}" step="0.01" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            <input type="text" inputmode="numeric" id="edit-aporte-value" value="${currentValue}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                         </form>
                     `,
                     buttons: [
@@ -1905,13 +1949,16 @@
                         { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
+                const valueInput = document.getElementById('edit-aporte-value');
+                this.addFormattingListener(valueInput);
+                valueInput.value = this.formatNumberWithThousands(valueInput.value);
             },
             async handleUpdateTransaction() {
                 const id = document.getElementById('edit-transaction-id').value;
                 const block = document.getElementById('edit-transaction-block').value;
                 const categoria = document.getElementById('edit-transaction-categoria').value;
                 const descripcion = document.getElementById('edit-transaction-descripcion').value;
-                const monto = parseFloat(document.getElementById('edit-transaction-monto').value);
+                const monto = this.getNumericValue(document.getElementById('edit-transaction-monto').value);
 
                 if (!id || !block || !categoria || isNaN(monto) || monto <= 0) {
                     this.showToast("Por favor, complete todos los campos con valores válidos.", "error");
@@ -1993,7 +2040,7 @@
                             </div>
                             <div>
                                 <label for="edit-temp-monto" class="block text-sm font-medium">Monto</label>
-                                <input type="number" id="edit-temp-monto" required min="0" step="0.01" value="${transaction.monto}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                                <input type="text" inputmode="numeric" id="edit-temp-monto" required value="${transaction.monto}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
                             </div>
                         </form>
                     `,
@@ -2002,6 +2049,9 @@
                          { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
+                const montoInput = document.getElementById('edit-temp-monto');
+                this.addFormattingListener(montoInput);
+                montoInput.value = this.formatNumberWithThousands(montoInput.value);
             },
             handleUpdateTempTransaction(id) {
                 const index = this.state.currentTransactions.findIndex(t => t.id === id);
@@ -2009,7 +2059,7 @@
 
                 const categoria = document.getElementById('edit-temp-categoria').value;
                 const descripcion = document.getElementById('edit-temp-descripcion').value;
-                const monto = parseFloat(document.getElementById('edit-temp-monto').value);
+                const monto = this.getNumericValue(document.getElementById('edit-temp-monto').value);
 
                 if (!categoria || isNaN(monto) || monto <= 0) {
                     this.showToast("Por favor, complete los campos con valores válidos.", "error");
