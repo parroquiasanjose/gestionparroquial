@@ -116,6 +116,11 @@
         #colectas-calculator-view {
             overflow-y: auto;
         }
+        
+        /* --- Notification Ticker --- */
+        #notification-ticker {
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
@@ -154,6 +159,12 @@
             <div class="container mx-auto px-6 py-4 flex justify-between items-center">
                 <h1 class="text-2xl font-bold">Gestión Parroquial</h1>
                 <div class="flex items-center gap-4">
+                    <!-- NEW: Notification Ticker -->
+                    <div id="notification-ticker-container" class="relative h-8 w-64 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700 hidden">
+                        <div id="notification-ticker" class="absolute inset-0 flex items-center px-4 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                            <!-- Ticker items will be injected here -->
+                        </div>
+                    </div>
                     <div id="notification-bell-container">
                         <button id="notification-bell-btn" class="text-slate-600 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
@@ -579,6 +590,8 @@
                 recordsPerPage: 3,
                 currentEditDay: { date: null, block: null },
                 summaryChartInstance: null,
+                tickerInterval: null,
+                currentTickerIndex: 0,
             },
 
             // --- DOM ELEMENTS ---
@@ -696,6 +709,8 @@
                     categoryGeneralEgresoContainer: document.getElementById('category-general-egreso-container'),
                     categoryBancoIngresoContainer: document.getElementById('category-banco-ingreso-container'),
                     categoryBancoEgresoContainer: document.getElementById('category-banco-egreso-container'),
+                    notificationTickerContainer: document.getElementById('notification-ticker-container'),
+                    notificationTicker: document.getElementById('notification-ticker'),
 
                     // New elements for Colectas Calculator
                     colectasCalculatorView: document.getElementById('colectas-calculator-view'),
@@ -2739,6 +2754,7 @@
                 const pendingNotifications = notifications.filter(n => n.estado === 'pendiente');
 
                 this.dom.notificationBadge.classList.toggle('hidden', pendingNotifications.length === 0);
+                this.updateNotificationTicker(pendingNotifications);
                 
                 if (pendingNotifications.length > 0) {
                     this.dom.remindersList.innerHTML = pendingNotifications.map(n => `
@@ -2753,6 +2769,49 @@
                     `).join('');
                 } else {
                     this.dom.remindersList.innerHTML = '<li><p class="text-slate-500 dark:text-slate-400">No hay alertas pendientes.</p></li>';
+                }
+            },
+
+            updateNotificationTicker(pendingNotifications) {
+                clearInterval(this.state.tickerInterval);
+                this.state.tickerInterval = null;
+                const container = this.dom.notificationTickerContainer;
+                const ticker = this.dom.notificationTicker;
+
+                if (pendingNotifications.length === 0) {
+                    container.classList.add('hidden');
+                    return;
+                }
+
+                container.classList.remove('hidden');
+                this.state.currentTickerIndex = 0;
+
+                const showNextItem = () => {
+                    const currentNotifications = this.getUpcomingNotifications().filter(n => n.estado === 'pendiente');
+                    if (currentNotifications.length === 0) {
+                        container.classList.add('hidden');
+                        clearInterval(this.state.tickerInterval);
+                        return;
+                    }
+
+                    const notification = currentNotifications[this.state.currentTickerIndex];
+                    
+                    ticker.style.opacity = 0;
+
+                    setTimeout(() => {
+                        ticker.innerHTML = `
+                            <span class="font-semibold truncate">${notification.title}:</span>
+                            <span class="ml-2 truncate">${notification.descripcion || 'Próximamente...'}</span>
+                        `;
+                        ticker.style.opacity = 1;
+                    }, 500);
+
+                    this.state.currentTickerIndex = (this.state.currentTickerIndex + 1) % currentNotifications.length;
+                };
+
+                showNextItem();
+                if (pendingNotifications.length > 1) {
+                    this.state.tickerInterval = setInterval(showNextItem, 5000);
                 }
             },
 
