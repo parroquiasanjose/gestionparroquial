@@ -69,7 +69,7 @@
             50% { opacity: .5; }
         }
 
-        /* --- NEW: Unified Modal Styling --- */
+        /* --- Unified Modal Styling --- */
         .modal-backdrop {
             transition: opacity 0.3s ease-in-out;
         }
@@ -111,6 +111,11 @@
         }
         .new-ingreso { animation: highlight-green 1.5s ease-out; }
         .new-egreso { animation: highlight-red 1.5s ease-out; }
+        
+        /* --- Colectas Calculator View Scrolling --- */
+        #colectas-calculator-view {
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
@@ -155,8 +160,8 @@
                             <div id="notification-badge" class="hidden"></div>
                         </button>
                         <div id="reminders-panel" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-700 rounded-lg shadow-xl p-4 origin-top-right">
-                            <h4 class="font-bold text-md mb-2">Próximos Recordatorios</h4>
-                            <ul id="reminders-list" class="space-y-2 text-sm max-h-64 overflow-y-auto">
+                            <h4 class="font-bold text-md mb-2">Alertas Pendientes</h4>
+                            <ul id="reminders-list" class="space-y-3 text-sm max-h-64 overflow-y-auto">
                                 <!-- Reminders will be injected here -->
                             </ul>
                         </div>
@@ -225,6 +230,12 @@
                             <h2 class="text-2xl font-bold">Información</h2>
                         </div>
                         <div class="flex flex-col gap-4 mb-6 flex-grow justify-center">
+                            <button id="colectas-calculator-btn" class="bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600/50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-lime-500" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 00-1 1v1a1 1 0 001 1h6a1 1 0 001-1V5a1 1 0 00-1-1H7zM6 9a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                </svg>
+                                Calculadora de Colectas
+                            </button>
                             <button id="colectas-online-btn" class="bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600/50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -246,7 +257,7 @@
                             </button>
                             <button id="manage-reminders-btn" class="bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600/50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
-                                Gestionar Recordatorios
+                                Gestionar Alertas
                             </button>
                         </div>
                     </div>
@@ -392,23 +403,31 @@
 
             <!-- REMINDERS MANAGEMENT VIEW -->
             <section id="reminders-management-view" class="view-container hidden max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg">
-                <h2 class="text-3xl font-bold mb-6 text-center">Gestión de Recordatorios</h2>
+                <h2 class="text-3xl font-bold mb-6 text-center">Gestión de Alertas</h2>
                 <div class="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl mb-8">
-                    <h3 class="text-xl font-bold mb-4">Nuevo Recordatorio</h3>
-                    <form id="new-reminder-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div class="md:col-span-1">
-                            <label for="reminder-title" class="block text-sm font-medium">Título</label>
-                            <input type="text" id="reminder-title" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                    <h3 class="text-xl font-bold mb-4">Nueva Alerta</h3>
+                    <form id="new-reminder-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                        <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="reminder-title" class="block text-sm font-medium">Título</label>
+                                <input type="text" id="reminder-title" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                            <div>
+                                <label for="reminder-date" class="block text-sm font-medium">Fecha</label>
+                                <input type="date" id="reminder-date" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
                         </div>
-                        <div>
-                            <label for="reminder-date" class="block text-sm font-medium">Fecha</label>
-                            <input type="date" id="reminder-date" required class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                        <div class="md:col-span-2">
+                             <label for="reminder-description" class="block text-sm font-medium">Descripción</label>
+                             <textarea id="reminder-description" rows="2" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600"></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl shadow-lg transition-all">Guardar</button>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl shadow-lg transition-all">Guardar Alerta</button>
+                        </div>
                     </form>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold mb-4">Recordatorios Programados</h3>
+                    <h3 class="text-xl font-bold mb-4">Alertas Programadas</h3>
                     <div id="reminders-list-container" class="space-y-3 max-h-96 overflow-y-auto">
                         <!-- Reminder list will be injected here -->
                     </div>
@@ -470,7 +489,7 @@
         </div>
     </div>
 
-    <!-- NEW: COLECTAS ONLINE VIEW (FULLSCREEN OVERLAY) -->
+    <!-- COLECTAS ONLINE VIEW (FULLSCREEN OVERLAY) -->
     <section id="colectas-online-view" class="fixed inset-0 z-[1000] bg-gray-100 dark:bg-slate-900 p-6 flex flex-col hidden">
         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300 dark:border-slate-700">
             <h2 class="text-3xl font-bold">Colectas</h2>
@@ -478,6 +497,36 @@
         </div>
         <div class="flex-grow">
              <iframe id="colectas-iframe" src="https://parroquiasanjose.github.io/Colectas-Parroquia-San-Jose/" class="w-full h-full border-2 border-slate-300 dark:border-slate-700 rounded-lg"></iframe>
+        </div>
+    </section>
+
+    <!-- NEW: COLECTAS CALCULATOR VIEW (FULLSCREEN OVERLAY) -->
+    <section id="colectas-calculator-view" class="fixed inset-0 z-[1000] bg-gray-100 dark:bg-slate-900 p-6 flex-col hidden">
+         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300 dark:border-slate-700">
+            <h2 class="text-3xl font-bold">Calculadora de Colectas</h2>
+            <div class="flex items-center gap-4">
+                <button id="back-from-colectas-calculator-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
+            </div>
+        </div>
+        <div class="flex-grow flex items-center justify-center">
+            <div class="w-full max-w-xl bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl space-y-6">
+                <div>
+                    <label for="colectas-imperadas-input" class="block text-lg font-medium mb-2">Colectas Imperadas</label>
+                    <input type="text" inputmode="numeric" id="colectas-imperadas-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                </div>
+                 <div>
+                    <label for="colectas-imperadas-result" class="block text-lg font-medium mb-2">Resultado (50%)</label>
+                    <input type="text" id="colectas-imperadas-result" readonly class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-200 dark:bg-slate-600 text-2xl font-bold text-green-600 dark:text-green-400">
+                </div>
+                 <div>
+                    <label for="colectas-parroquia-input" class="block text-lg font-medium mb-2">Colectas Parroquia</label>
+                    <input type="text" inputmode="numeric" id="colectas-parroquia-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                </div>
+                 <div class="pt-4 border-t-2 border-slate-300 dark:border-slate-600">
+                    <label for="colectas-total" class="block text-xl font-bold mb-2">TOTAL</label>
+                    <input type="text" id="colectas-total" readonly class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-200 dark:bg-slate-600 text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+                </div>
+            </div>
         </div>
     </section>
 
@@ -549,6 +598,7 @@
 
             cacheDom() {
                 this.dom = {
+                    // Existing elements
                     loader: document.getElementById('loader'),
                     toastContainer: document.getElementById('toast-container'),
                     loginView: document.getElementById('login-view'),
@@ -631,6 +681,7 @@
                     newReminderForm: document.getElementById('new-reminder-form'),
                     reminderTitle: document.getElementById('reminder-title'),
                     reminderDate: document.getElementById('reminder-date'),
+                    reminderDescription: document.getElementById('reminder-description'),
                     remindersListContainer: document.getElementById('reminders-list-container'),
                     genericModal: document.getElementById('generic-modal'),
                     modalTitle: document.getElementById('modal-title'),
@@ -645,6 +696,15 @@
                     categoryGeneralEgresoContainer: document.getElementById('category-general-egreso-container'),
                     categoryBancoIngresoContainer: document.getElementById('category-banco-ingreso-container'),
                     categoryBancoEgresoContainer: document.getElementById('category-banco-egreso-container'),
+
+                    // New elements for Colectas Calculator
+                    colectasCalculatorView: document.getElementById('colectas-calculator-view'),
+                    colectasCalculatorBtn: document.getElementById('colectas-calculator-btn'),
+                    backFromColectasCalculatorBtn: document.getElementById('back-from-colectas-calculator-btn'),
+                    colectasImperadasInput: document.getElementById('colectas-imperadas-input'),
+                    colectasImperadasResult: document.getElementById('colectas-imperadas-result'),
+                    colectasParroquiaInput: document.getElementById('colectas-parroquia-input'),
+                    colectasTotal: document.getElementById('colectas-total'),
                 };
             },
             
@@ -770,6 +830,14 @@
                     btn.addEventListener('click', this.showMainView);
                 });
 
+                // New bindings for Colectas Calculator
+                this.dom.colectasCalculatorBtn.addEventListener('click', this.showColectasCalculatorView);
+                this.dom.backFromColectasCalculatorBtn.addEventListener('click', this.hideColectasCalculatorView);
+
+                this.dom.colectasImperadasInput.addEventListener('input', this.calculateColectas);
+                this.dom.colectasParroquiaInput.addEventListener('input', this.calculateColectas);
+
+
                 this.dom.downloadRangePdfBtn.addEventListener('click', this.downloadDateRangePDF);
                 this.dom.searchRangeBtn.addEventListener('click', this.showDateRangeResults);
                 this.dom.continueToFormBtn.addEventListener('click', this.handleDatePromptContinue);
@@ -845,6 +913,14 @@
                     const { action, id } = button.dataset;
                     if (action === 'edit-reminder') this.showEditReminderModal(id);
                     else if (action === 'delete-reminder') this.handleDeleteReminder(id);
+                    else if (action === 'toggle-reminder-status') this.handleToggleReminderStatus(id);
+                });
+                
+                this.dom.remindersList.addEventListener('click', e => {
+                    const button = e.target.closest('button[data-action="complete-reminder"]');
+                    if(button) {
+                        this.handleToggleReminderStatus(button.dataset.id, 'completado');
+                    }
                 });
 
                 this.dom.addedTransactionsList.addEventListener('click', e => {
@@ -858,6 +934,9 @@
                 // Add formatting listeners for static inputs
                 this.addFormattingListener(this.dom.ingresoMonto);
                 this.addFormattingListener(this.dom.egresoMonto);
+                // Add formatting for new calculator inputs
+                this.addFormattingListener(this.dom.colectasImperadasInput);
+                this.addFormattingListener(this.dom.colectasParroquiaInput);
             },
 
             // --- AUTHENTICATION ---
@@ -1233,15 +1312,17 @@
             switchView(viewId) {
                 localStorage.setItem('currentParishView', viewId);
                 
-                if (viewId === 'colectas-online-view') {
-                    this.showColectasOnlineView();
+                // Hide all fullscreen overlays first
+                this.dom.colectasOnlineView.classList.add('hidden');
+                this.dom.colectasCalculatorView.classList.add('hidden');
+
+                if (viewId === 'colectas-online-view' || viewId === 'colectas-calculator-view') {
+                    document.getElementById(viewId).classList.remove('hidden');
                     return;
                 }
-                
-                this.hideColectasOnlineView();
 
                 const currentViewEl = document.getElementById(this.state.currentView);
-                if (currentViewEl) {
+                if (currentViewEl && currentViewEl.classList.contains('view-container')) {
                     currentViewEl.classList.remove('visible');
                 }
 
@@ -1356,12 +1437,10 @@
                 return `${day}/${month}/${year}`;
             },
 
-            // --- NEW: NUMBER FORMATTING HELPERS ---
+            // --- NUMBER FORMATTING HELPERS ---
             formatNumberWithThousands(n) {
                 if (n === null || n === undefined) return '';
-                // Remove existing separators and non-numeric characters
                 const numStr = String(n).replace(/\D/g, '');
-                // Add new separators
                 return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             },
 
@@ -1369,8 +1448,7 @@
                 if (typeof formattedValue !== 'string') {
                     return parseFloat(formattedValue) || 0;
                 }
-                // Remove all dots and parse
-                return parseFloat(formattedValue.replace(/\./g, '')) || 0;
+                return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
             },
             
             addFormattingListener(element) {
@@ -1407,7 +1485,6 @@
                 
                 if (generalInRange.length === 0) {
                     this.dom.summaryBalanceContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros generales en el rango seleccionado.</p>';
-                    // Render empty chart
                     this.renderSummaryChart(0, 0);
                     return;
                 }
@@ -1417,7 +1494,6 @@
                 const totalEgresos = summary.egresos.reduce((sum, item) => sum + item.monto, 0);
                 const saldoFinal = totalIngresos - totalEgresos;
 
-                // NEW: Render the chart with the calculated totals
                 this.renderSummaryChart(totalIngresos, totalEgresos);
 
                 let html = `
@@ -1442,7 +1518,6 @@
                 const chartElement = this.dom.summaryChart;
                 if (!chartElement) return;
 
-                // Destroy previous chart instance if it exists
                 if (this.state.summaryChartInstance) {
                     this.state.summaryChartInstance.destroy();
                 }
@@ -1452,14 +1527,8 @@
                     datasets: [{
                         label: 'Balance',
                         data: [ingresos, egresos],
-                        backgroundColor: [
-                            'rgba(52, 211, 153, 0.7)', // emerald-400
-                            'rgba(239, 68, 68, 0.7)'   // red-500
-                        ],
-                        borderColor: [
-                            'rgba(16, 185, 129, 1)',  // emerald-600
-                            'rgba(220, 38, 38, 1)'    // red-600
-                        ],
+                        backgroundColor: ['rgba(52, 211, 153, 0.7)', 'rgba(239, 68, 68, 0.7)'],
+                        borderColor: ['rgba(16, 185, 129, 1)', 'rgba(220, 38, 38, 1)'],
                         borderWidth: 1
                     }]
                 };
@@ -1473,9 +1542,7 @@
                         plugins: {
                             legend: {
                                 position: 'top',
-                                labels: {
-                                    color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569'
-                                }
+                                labels: { color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569' }
                             }
                         }
                     },
@@ -1665,12 +1732,16 @@
                 this.dom.entryDateInput.value = `${year}-${month}-${day}`;
             },
             showColectasOnlineView() {
-                localStorage.setItem('currentParishView', 'colectas-online-view');
-                this.dom.colectasOnlineView.classList.remove('hidden');
+                this.switchView('colectas-online-view');
             },
             hideColectasOnlineView() {
-                localStorage.setItem('currentParishView', 'main-view');
-                this.dom.colectasOnlineView.classList.add('hidden');
+                this.showMainView();
+            },
+            showColectasCalculatorView() {
+                this.switchView('colectas-calculator-view');
+            },
+            hideColectasCalculatorView() {
+                this.showMainView();
             },
             showDateRangeResults() {
                 const startDate = this.dom.startDateFilter.value;
@@ -2516,22 +2587,27 @@
                 const container = this.dom.remindersListContainer;
                 container.innerHTML = '';
                 if (this.state.reminders.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-500">No hay recordatorios personalizados.</p>';
+                    container.innerHTML = '<p class="text-center text-gray-500">No hay alertas personalizadas.</p>';
                     return;
                 }
                 const sortedReminders = [...this.state.reminders].sort((a,b) => a.fecha.localeCompare(b.fecha));
 
                 sortedReminders.forEach(reminder => {
                     const item = document.createElement('div');
-                    item.className = 'flex justify-between items-center p-3 bg-gray-100 dark:bg-slate-700 rounded-lg';
+                    const isCompleted = reminder.estado === 'completado';
+                    item.className = `p-3 rounded-lg ${isCompleted ? 'bg-gray-200 dark:bg-slate-800 opacity-60' : 'bg-gray-100 dark:bg-slate-700'}`;
                     item.innerHTML = `
-                        <div>
-                            <p class="font-bold">${reminder.titulo}</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">${this.formatDate(reminder.fecha)}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button data-action="edit-reminder" data-id="${reminder.id}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md transition-colors">Editar</button>
-                            <button data-action="delete-reminder" data-id="${reminder.id}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors">Eliminar</button>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <p class="font-bold ${isCompleted ? 'line-through' : ''}">${reminder.titulo}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">${reminder.descripcion || 'Sin descripción'}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">${this.formatDate(reminder.fecha)} - <span class="font-semibold">${isCompleted ? 'Completado' : 'Pendiente'}</span></p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2 items-end">
+                                <button data-action="toggle-reminder-status" data-id="${reminder.id}" class="text-xs ${isCompleted ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white px-3 py-1 rounded-md transition-colors">${isCompleted ? 'Marcar Pendiente' : 'Completar'}</button>
+                                <button data-action="edit-reminder" data-id="${reminder.id}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md transition-colors">Editar</button>
+                                <button data-action="delete-reminder" data-id="${reminder.id}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors">Eliminar</button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(item);
@@ -2540,6 +2616,7 @@
             async handleAddReminder() {
                 const title = this.dom.reminderTitle.value.trim();
                 const date = this.dom.reminderDate.value;
+                const description = this.dom.reminderDescription.value.trim();
                 if (!title || !date) {
                     this.showToast("El título y la fecha son obligatorios.", "error");
                     return;
@@ -2547,12 +2624,17 @@
                 this.toggleLoader(true);
                 try {
                     const collRef = this.getCollectionRef("recordatorios");
-                    await addDoc(collRef, { titulo: title, fecha: date });
+                    await addDoc(collRef, { 
+                        titulo: title, 
+                        fecha: date,
+                        descripcion: description,
+                        estado: 'pendiente' // Default status
+                    });
                     this.dom.newReminderForm.reset();
-                    this.showToast("Recordatorio añadido.", "success");
+                    this.showToast("Alerta añadida.", "success");
                 } catch (error) {
                     console.error("Error adding reminder:", error);
-                    this.showToast("No se pudo añadir el recordatorio.", "error");
+                    this.showToast("No se pudo añadir la alerta.", "error");
                 } finally {
                     this.toggleLoader(false);
                 }
@@ -2564,7 +2646,7 @@
                 this.state.pendingAction = () => this.handleUpdateReminder(id);
 
                 this.showModal({
-                    title: "Editar Recordatorio",
+                    title: "Editar Alerta",
                     body: `
                         <form id="edit-reminder-form" class="space-y-4">
                             <div>
@@ -2574,6 +2656,10 @@
                             <div>
                                 <label for="edit-reminder-date" class="block text-sm font-medium">Fecha</label>
                                 <input type="date" id="edit-reminder-date" value="${reminder.fecha}" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">
+                            </div>
+                            <div>
+                                <label for="edit-reminder-description" class="block text-sm font-medium">Descripción</label>
+                                <textarea id="edit-reminder-description" rows="3" class="mt-1 block w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-600">${reminder.descripcion || ''}</textarea>
                             </div>
                         </form>
                     `,
@@ -2586,6 +2672,7 @@
             async handleUpdateReminder(id) {
                 const title = document.getElementById('edit-reminder-title').value.trim();
                 const date = document.getElementById('edit-reminder-date').value;
+                const description = document.getElementById('edit-reminder-description').value.trim();
                 if (!title || !date) {
                     this.showToast("El título y la fecha no pueden estar vacíos.", "error");
                     return;
@@ -2593,12 +2680,12 @@
                 this.toggleLoader(true);
                 try {
                     const docRef = doc(this.getCollectionRef("recordatorios"), id);
-                    await updateDoc(docRef, { titulo: title, fecha: date });
+                    await updateDoc(docRef, { titulo: title, fecha: date, descripcion: description });
                     this.hideModal();
-                    this.showToast("Recordatorio actualizado.", "success");
+                    this.showToast("Alerta actualizada.", "success");
                 } catch(error) {
                     console.error("Error updating reminder:", error);
-                    this.showToast("Error al actualizar el recordatorio.", "error");
+                    this.showToast("Error al actualizar la alerta.", "error");
                 } finally {
                     this.toggleLoader(false);
                 }
@@ -2607,7 +2694,7 @@
                 this.state.pendingAction = () => this.deleteReminder(id);
                 this.showModal({
                     title: "Confirmar Eliminación",
-                    body: `<p>¿Estás seguro de que quieres eliminar este recordatorio?</p>`,
+                    body: `<p>¿Estás seguro de que quieres eliminar esta alerta?</p>`,
                     buttons: [
                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
                         { text: 'Eliminar', class: 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); this.hideModal(); } }
@@ -2619,10 +2706,28 @@
                 try {
                     const docRef = doc(this.getCollectionRef("recordatorios"), id);
                     await deleteDoc(docRef);
-                    this.showToast("Recordatorio eliminado.", "success");
+                    this.showToast("Alerta eliminada.", "success");
                 } catch(error) {
                     console.error("Error deleting reminder:", error);
-                    this.showToast("Error al eliminar el recordatorio.", "error");
+                    this.showToast("Error al eliminar la alerta.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            async handleToggleReminderStatus(id, forceState = null) {
+                const reminder = this.state.reminders.find(r => r.id === id);
+                if (!reminder) return;
+                
+                const newStatus = forceState ? forceState : (reminder.estado === 'pendiente' ? 'completado' : 'pendiente');
+
+                this.toggleLoader(true);
+                try {
+                    const docRef = doc(this.getCollectionRef("recordatorios"), id);
+                    await updateDoc(docRef, { estado: newStatus });
+                    this.showToast(`Alerta marcada como ${newStatus}.`, "success");
+                } catch(error) {
+                    console.error("Error updating reminder status:", error);
+                    this.showToast("Error al actualizar el estado.", "error");
                 } finally {
                     this.toggleLoader(false);
                 }
@@ -2631,17 +2736,23 @@
             // --- NOTIFICATIONS ---
             updateReminders() {
                 const notifications = this.getUpcomingNotifications();
-                this.dom.notificationBadge.classList.toggle('hidden', notifications.length === 0);
+                const pendingNotifications = notifications.filter(n => n.estado === 'pendiente');
+
+                this.dom.notificationBadge.classList.toggle('hidden', pendingNotifications.length === 0);
                 
-                if (notifications.length > 0) {
-                    this.dom.remindersList.innerHTML = notifications.map(n => `
-                        <li class="border-b border-gray-200 dark:border-slate-600 pb-2">
+                if (pendingNotifications.length > 0) {
+                    this.dom.remindersList.innerHTML = pendingNotifications.map(n => `
+                        <li class="border-b border-gray-200 dark:border-slate-600 pb-3 last:border-b-0">
                             <p class="font-semibold">${n.title}</p>
-                            <p class="text-slate-500 dark:text-slate-400">${n.dateText} (${n.daysAway === 0 ? 'Hoy' : `en ${n.daysAway} día(s)`})</p>
+                            <p class="text-slate-600 dark:text-slate-400 text-xs my-1">${n.descripcion || 'Sin descripción'}</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <p class="text-slate-500 dark:text-slate-400 text-xs">${n.dateText} (${n.daysAway === 0 ? 'Hoy' : `en ${n.daysAway} día(s)`})</p>
+                                <button data-action="complete-reminder" data-id="${n.id}" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md transition-colors">Completado</button>
+                            </div>
                         </li>
                     `).join('');
                 } else {
-                    this.dom.remindersList.innerHTML = '<li><p class="text-slate-500 dark:text-slate-400">No hay recordatorios próximos.</p></li>';
+                    this.dom.remindersList.innerHTML = '<li><p class="text-slate-500 dark:text-slate-400">No hay alertas pendientes.</p></li>';
                 }
             },
 
@@ -2650,36 +2761,7 @@
                 today.setHours(0, 0, 0, 0);
                 const upcoming = [];
                 const reminderDays = 15;
-                const monthMap = { "ENERO": 0, "FEBRERO": 1, "MARZO": 2, "ABRIL": 3, "MAYO": 4, "JUNIO": 5, "JULIO": 6, "AGOSTO": 7, "SEPTIEMBRE": 8, "OCTUBRE": 9, "NOVIEMBRE": 10, "DICIEMBRE": 11 };
-
-                // Process static collections
-                this.state.envioColectas.forEach(colecta => {
-                    const dateString = colecta.fecha.toUpperCase();
-                    const parts = dateString.split(' ');
-                    const dayPart = parts[0].split('-')[0];
-                    const monthPart = parts[parts.length - 1];
-                    
-                    if (dayPart && monthMap[monthPart] !== undefined) {
-                        const day = parseInt(dayPart);
-                        const month = monthMap[monthPart];
-                        let year = today.getFullYear();
-                        
-                        let colectaDate = new Date(year, month, day);
-                        colectaDate.setHours(0,0,0,0);
-
-                        if (colectaDate < today) {
-                            colectaDate.setFullYear(year + 1);
-                        }
-                        
-                        const timeDiff = colectaDate.getTime() - today.getTime();
-                        const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-                        if (daysAway >= 0 && daysAway <= reminderDays) {
-                            upcoming.push({ title: `Colecta: ${colecta.descripcion}`, dateText: colecta.fecha, daysAway });
-                        }
-                    }
-                });
-
+                
                 // Process dynamic reminders
                 this.state.reminders.forEach(reminder => {
                     const [year, month, day] = reminder.fecha.split('-').map(Number);
@@ -2688,11 +2770,30 @@
                     const daysAway = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
                     if (daysAway >= 0 && daysAway <= reminderDays) {
-                        upcoming.push({ title: reminder.titulo, dateText: this.formatDate(reminder.fecha), daysAway });
+                        upcoming.push({ 
+                            id: reminder.id,
+                            title: reminder.titulo, 
+                            descripcion: reminder.descripcion,
+                            dateText: this.formatDate(reminder.fecha), 
+                            daysAway,
+                            estado: reminder.estado
+                        });
                     }
                 });
 
                 return upcoming.sort((a,b) => a.daysAway - b.daysAway);
+            },
+
+            // --- NEW: COLECTAS CALCULATOR LOGIC ---
+            calculateColectas() {
+                const imperadas = this.getNumericValue(this.dom.colectasImperadasInput.value);
+                const parroquia = this.getNumericValue(this.dom.colectasParroquiaInput.value);
+
+                const resultado = imperadas * 0.5;
+                const total = resultado + parroquia;
+
+                this.dom.colectasImperadasResult.value = this.formatCurrency(resultado);
+                this.dom.colectasTotal.value = this.formatCurrency(total);
             },
         };
 
