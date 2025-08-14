@@ -123,7 +123,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-slate-800">
+<body class="bg-gray-200 text-slate-800">
 
     <!-- LOADING OVERLAY -->
     <div id="loader" class="fixed inset-0 z-[1100] flex items-center justify-center hidden">
@@ -357,7 +357,7 @@
 
                 <div class="mt-8">
                     <h3 class="text-xl font-bold mb-2">Registros a Guardar</h3>
-                    <div id="added-transactions-list" class="space-y-2 max-h-48 overflow-y-auto bg-gray-100 p-4 rounded-lg"></div>
+                    <div id="added-transactions-list" class="space-y-2 max-h-48 overflow-y-auto bg-gray-200 p-4 rounded-lg"></div>
                 </div>
 
                 <div class="mt-8 flex flex-col md:flex-row gap-4 justify-end">
@@ -501,7 +501,7 @@
     </div>
 
     <!-- COLECTAS ONLINE VIEW (FULLSCREEN OVERLAY) -->
-    <section id="colectas-online-view" class="fixed inset-0 z-[1000] bg-gray-100 p-6 flex flex-col hidden">
+    <section id="colectas-online-view" class="fixed inset-0 z-[1000] bg-gray-200 p-6 flex flex-col hidden">
         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300">
             <h2 class="text-3xl font-bold">Colectas</h2>
             <button id="back-from-colectas-online-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
@@ -512,7 +512,7 @@
     </section>
 
     <!-- NEW: COLECTAS CALCULATOR VIEW (FULLSCREEN OVERLAY) -->
-    <section id="colectas-calculator-view" class="fixed inset-0 z-[1000] bg-gray-100 p-6 flex-col hidden">
+    <section id="colectas-calculator-view" class="fixed inset-0 z-[1000] bg-gray-200 p-6 flex-col hidden">
          <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300">
             <h2 class="text-3xl font-bold">Calculadora de Colectas</h2>
             <div class="flex items-center gap-4">
@@ -1691,8 +1691,8 @@
                     : `<th class="py-2 px-3 text-left">Fecha</th><th class="py-2 px-3 text-left">Categoría</th><th class="py-2 px-3 text-right">Ingreso</th><th class="py-2 px-3 text-right">Egreso</th>`;
 
                 const footerHtml = isSummary
-                    ? `<div class="mt-4 p-3 bg-gray-100 rounded-lg flex justify-end font-semibold"><span>Subtotal: <span class="${totalIngresos > 0 ? 'text-green-500' : 'text-red-500'}">${this.formatCurrency(totalIngresos || totalEgresos)}</span></span></div>`
-                    : `<div class="mt-4 p-3 bg-gray-100 rounded-lg flex justify-between font-semibold"><span>Subtotal Ingresos: <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></span><span>Subtotal Egresos: <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></span></div>`;
+                    ? `<div class="mt-4 p-3 bg-gray-200 rounded-lg flex justify-end font-semibold"><span>Subtotal: <span class="${totalIngresos > 0 ? 'text-green-500' : 'text-red-500'}">${this.formatCurrency(totalIngresos || totalEgresos)}</span></span></div>`
+                    : `<div class="mt-4 p-3 bg-gray-200 rounded-lg flex justify-between font-semibold"><span>Subtotal Ingresos: <span class="text-green-500">${this.formatCurrency(totalIngresos)}</span></span><span>Subtotal Egresos: <span class="text-red-500">${this.formatCurrency(totalEgresos)}</span></span></div>`;
 
                 return `
                     <h3 class="text-xl font-semibold mb-3">${title}</h3>
@@ -2610,7 +2610,7 @@
                 sortedReminders.forEach(reminder => {
                     const item = document.createElement('div');
                     const isCompleted = reminder.estado === 'completado';
-                    item.className = `p-3 rounded-lg ${isCompleted ? 'bg-gray-200 opacity-60' : 'bg-gray-100'}`;
+                    item.className = `p-3 rounded-lg ${isCompleted ? 'bg-gray-300 opacity-60' : 'bg-gray-200'}`;
                     item.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
