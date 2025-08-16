@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión Parroquial - San José</title>
+    <!-- FAVICON ADDED -->
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/vTQjffhK/NUEVO-LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -136,7 +138,11 @@
     <!-- LOGIN VIEW -->
     <section id="login-view" class="hidden flex items-center justify-center h-screen">
         <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl">
-            <h2 class="text-3xl font-bold mb-2 text-center">Gestión Parroquial</h2>
+            <!-- LOGO ADDED -->
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <img src="https://i.postimg.cc/vTQjffhK/NUEVO-LOGO.png" alt="Logo Parroquial" class="h-10 w-10">
+                <h2 class="text-3xl font-bold text-center">Gestión Parroquial</h2>
+            </div>
             <p class="text-center text-slate-500 mb-6">Inicia sesión para continuar</p>
             <div class="space-y-4">
                 <div>
@@ -157,7 +163,11 @@
         <!-- NAVIGATION MENU -->
         <nav class="bg-white shadow-md sticky top-0 z-40">
             <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold">Gestión Parroquial</h1>
+                <!-- LOGO ADDED -->
+                <div class="flex items-center gap-3">
+                    <img src="https://i.postimg.cc/vTQjffhK/NUEVO-LOGO.png" alt="Logo Parroquial" class="h-8 w-8">
+                    <h1 class="text-2xl font-bold">Gestión Parroquial</h1>
+                </div>
                 <div class="flex items-center gap-4">
                     <!-- NEW: Notification Ticker -->
                     <div id="notification-ticker-container" class="relative h-8 w-64 overflow-hidden rounded-full bg-slate-100 hidden">
@@ -429,8 +439,8 @@
                             </div>
                         </div>
                         <div class="md:col-span-2">
-                             <label for="reminder-description" class="block text-sm font-medium">Descripción</label>
-                             <textarea id="reminder-description" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg bg-white"></textarea>
+                           <label for="reminder-description" class="block text-sm font-medium">Descripción</label>
+                           <textarea id="reminder-description" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg bg-white"></textarea>
                         </div>
                         <div class="md:col-span-2">
                             <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-xl shadow-lg transition-all">Guardar Alerta</button>
