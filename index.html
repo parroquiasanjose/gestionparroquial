@@ -675,7 +675,7 @@
                     colectasTotal: document.getElementById('colectas-total'),
                 };
             },
-            
+
             // --- FIREBASE SETUP ---
             async initFirebase() {
                 const firebaseConfig = {
@@ -823,6 +823,10 @@
                         this.hideModal();
                     }
                 });
+
+                // Listeners for dropdowns to create new category
+                this.dom.ingresoCategoria.addEventListener('change', (e) => this.handleCategorySelect(e, 'ingreso'));
+                this.dom.egresoCategoria.addEventListener('change', (e) => this.handleCategorySelect(e, 'egreso'));
 
                 this.dom.editDayList.addEventListener('click', e => {
                     const button = e.target.closest('button[data-action]');
@@ -1645,8 +1649,7 @@
                 this.state.currentTransactions = [];
                 this.renderAddedTransactions();
 
-                this.dom.ingresoCategoria.innerHTML = this.state.categories[block].ingreso.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
-                this.dom.egresoCategoria.innerHTML = this.state.categories[block].egreso.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                this.updateDataEntryCategories(block);
             },
 
             showEnvioColectasView() { this.switchView('envio-colectas-view'); this.renderEnvioColectas(); },
@@ -2339,6 +2342,9 @@
                     if (this.state.currentView === 'category-management-view') {
                         this.renderCategoryLists();
                     }
+                    if (this.state.currentView === 'data-entry-view') {
+                        this.updateDataEntryCategories(this.state.currentBlock);
+                    }
                 });
             },
             showCategoryManagementView() {
@@ -2391,6 +2397,92 @@
                 } finally {
                     this.toggleLoader(false);
                 }
+            },
+            showNewCategoryModal(block, type) {
+                const title = type === 'ingreso' ? 'Nueva Categoría de Ingreso' : 'Nueva Categoría de Egreso';
+                const color = type === 'ingreso' ? 'green' : 'red';
+                this.showModal({
+                    title: title,
+                    body: `
+                        <form id="new-category-form" class="space-y-4">
+                            <label for="new-category-name" class="block text-sm font-medium">Nombre de la nueva categoría</label>
+                            <input type="text" id="new-category-name" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg bg-white">
+                        </form>
+                    `,
+                    buttons: [
+                        { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                        { text: 'Guardar', class: `bg-${color}-600 hover:bg-${color}-700 text-white font-bold py-2 px-6 rounded-lg transition-all`, action: () => this.handleNewCategoryCreation(block, type) }
+                    ]
+                });
+            },
+            showEditCategorySelectModal(block, type) {
+                const title = `Modificar Categorías de ${type === 'ingreso' ? 'Ingreso' : 'Egreso'}`;
+                const categories = this.state.categories[block][type];
+
+                const categoryListHTML = categories.length > 0 ? categories.map(cat => `
+                    <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded-md">
+                        <span>${cat.name}</span>
+                        <div class="flex gap-2">
+                             <button data-action="edit-category" data-id="${cat.id}" data-name="${cat.name}" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md transition-colors">Editar</button>
+                             <button data-action="delete-category" data-id="${cat.id}" data-name="${cat.name}" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors">Eliminar</button>
+                        </div>
+                    </li>
+                `).join('') : '<p class="text-center text-gray-500">No hay categorías para modificar.</p>';
+
+                this.showModal({
+                    title: title,
+                    body: `<ul class="space-y-2 mb-4 max-h-64 overflow-y-auto">${categoryListHTML}</ul>`,
+                    buttons: [
+                        { text: 'Cerrar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal }
+                    ]
+                });
+                // Add listeners to the dynamically created buttons
+                const modalBody = this.dom.modalBody;
+                if (modalBody) {
+                    modalBody.addEventListener('click', e => {
+                        const button = e.target.closest('button[data-action]');
+                        if (!button) return;
+                        const { action, id, name } = button.dataset;
+                        // Use existing functionality
+                        if (action === 'edit-category') this.showEditCategoryModal(id, name);
+                        else if (action === 'delete-category') this.handleDeleteCategory(id, name);
+                    });
+                }
+            },
+            async handleNewCategoryCreation(block, type) {
+                const name = document.getElementById('new-category-name').value.trim();
+                if (!name) {
+                    this.showToast("El nombre de la categoría no puede estar vacío.", "error");
+                    return;
+                }
+                this.toggleLoader(true);
+                try {
+                    const collRef = this.getCollectionRef("categorias");
+                    await addDoc(collRef, { name, block, type });
+                    this.hideModal();
+                    this.showToast("Categoría añadida.", "success");
+                } catch (error) {
+                    console.error("Error adding category:", error);
+                    this.showToast("No se pudo añadir la categoría.", "error");
+                } finally {
+                    this.toggleLoader(false);
+                }
+            },
+            handleCategorySelect(e, type) {
+                if (e.target.value === 'new-category') {
+                    e.target.value = '';
+                    this.showNewCategoryModal(this.state.currentBlock, type);
+                } else if (e.target.value === 'edit-categories') {
+                    e.target.value = '';
+                    this.showEditCategorySelectModal(this.state.currentBlock, type);
+                }
+            },
+            updateDataEntryCategories(block) {
+                const ingresoOptions = this.state.categories[block].ingreso.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                const egresoOptions = this.state.categories[block].egreso.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                
+                this.dom.ingresoCategoria.innerHTML = ingresoOptions + `<option value="new-category">Crear nueva categoría...</option><option value="edit-categories">Modificar categorías existentes...</option>`;
+                this.dom.egresoCategoria.innerHTML = egresoOptions + `<option value="new-category">Crear nueva categoría...</option><option value="edit-categories">Modificar categorías existentes...</option>`;
             },
             showEditCategoryModal(id, currentName) {
                 this.state.pendingAction = () => this.handleUpdateCategory(id);
@@ -2515,7 +2607,7 @@
                         descripcion: description,
                         estado: 'pendiente' // Default status
                     });
-                    this.dom.newReminderForm.reset();
+                    this.dom.new-reminder-form.reset();
                     this.showToast("Alerta añadida.", "success");
                 } catch (error) {
                     console.error("Error adding reminder:", error);
