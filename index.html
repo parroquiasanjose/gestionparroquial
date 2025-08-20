@@ -197,7 +197,7 @@
 
             <!-- MAIN VIEW -->
             <main id="main-view" class="view-container">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- General Income and Expenses Block -->
                     <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col">
                         <div class="flex items-center mb-4">
@@ -219,33 +219,12 @@
                         </div>
                     </div>
 
-                    <!-- Bank Block -->
-                    <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-green-100 p-3 rounded-lg mr-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                            <h2 class="text-2xl font-bold">Banco</h2>
-                        </div>
-                        <div class="mb-4">
-                            <input type="text" id="search-banco-input" placeholder="Buscar por fecha (dd/mm/aaaa)..." class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                        </div>
-                        <div id="history-banco-container" class="space-y-4 min-h-[24rem] flex-grow flex flex-col justify-between"></div>
-                         <div class="mt-auto pt-4">
-                            <button data-action="load-data" data-block="banco" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-all transform active:scale-95">
-                                + Cargar Movimiento
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Information Block -->
                      <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col">
                         <div class="flex items-center mb-4">
                             <div class="bg-indigo-100 p-3 rounded-lg mr-4">
                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                             <h2 class="text-2xl font-bold">Información</h2>
@@ -253,16 +232,9 @@
                         <div class="flex flex-col gap-4 mb-6 flex-grow justify-center">
                             <button id="colectas-calculator-btn" class="bg-white hover:bg-slate-50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-lime-500" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 00-1 1v1a1 1 0 001 1h6a1 1 0 001-1V5a1 1 0 00-1-1H7zM6 9a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 00-1 1v1a1 1 0 001 1h6a1 1 0 001-1V5a1 1 0 00-1-1H7zM6 9a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
                                 </svg>
                                 Calculadora de Colectas
-                            </button>
-                            <button id="colectas-online-btn" class="bg-white hover:bg-slate-50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                </svg>
-                                Colectas
                             </button>
                             <button id="envios-colectas-btn" class="bg-white hover:bg-slate-50 p-4 rounded-xl shadow-md text-left transition-all flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
@@ -403,7 +375,7 @@
             </section>
 
             <!-- CATEGORY MANAGEMENT VIEW -->
-            <section id="category-management-view" class="view-container hidden max-w-7xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+            <section id="category-management-view" class="view-container hidden max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
                 <h2 class="text-3xl font-bold mb-8 text-center">Gestión de Categorías</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <!-- General Categories -->
@@ -411,12 +383,6 @@
                         <h3 class="text-2xl font-bold text-center border-b-2 border-blue-500 pb-2">Generales</h3>
                         <div id="category-general-ingreso-container"></div>
                         <div id="category-general-egreso-container"></div>
-                    </div>
-                    <!-- Bank Categories -->
-                    <div class="space-y-8">
-                        <h3 class="text-2xl font-bold text-center border-b-2 border-green-500 pb-2">Banco</h3>
-                        <div id="category-banco-ingreso-container"></div>
-                        <div id="category-banco-egreso-container"></div>
                     </div>
                 </div>
                 <button id="back-from-categories-btn" class="mt-12 w-full max-w-xs mx-auto block bg-slate-500 hover:bg-slate-600 text-white font-semibold py-3 rounded-xl shadow-lg transition-all">Volver</button>
@@ -491,8 +457,8 @@
 
                 <!-- Detailed Complete Balance -->
                 <div>
-                    <h3 class="text-2xl font-bold mb-4 text-center border-b-2 pb-2 border-purple-500">Balance Completo Detallado</h3>
-                    <p class="text-center text-sm text-gray-500 mb-4">(Incluye Generales y Banco)</p>
+                    <h3 class="text-2xl font-bold mb-4 text-center border-b-2 pb-2 border-purple-500">Balance Detallado</h3>
+                    <p class="text-center text-sm text-gray-500 mb-4">(Movimientos Generales)</p>
                     <div id="balance-details-container" class="space-y-8">
                         <!-- Detailed balance will be injected here -->
                     </div>
@@ -510,45 +476,34 @@
         </div>
     </div>
 
-    <!-- COLECTAS ONLINE VIEW (FULLSCREEN OVERLAY) -->
-    <section id="colectas-online-view" class="fixed inset-0 z-[1000] bg-gray-200 p-6 flex flex-col hidden">
-        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300">
-            <h2 class="text-3xl font-bold">Colectas</h2>
-            <button id="back-from-colectas-online-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
-        </div>
-        <div class="flex-grow">
-             <iframe id="colectas-iframe" src="https://parroquiasanjose.github.io/Colectas-Parroquia-San-Jose/" class="w-full h-full border-2 border-slate-300 rounded-lg"></iframe>
-        </div>
-    </section>
-
     <!-- NEW: COLECTAS CALCULATOR VIEW (FULLSCREEN OVERLAY) -->
     <section id="colectas-calculator-view" class="fixed inset-0 z-[1000] bg-gray-200 p-6 flex-col hidden">
-         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300">
-            <h2 class="text-3xl font-bold">Calculadora de Colectas</h2>
-            <div class="flex items-center gap-4">
-                <button id="back-from-colectas-calculator-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
-            </div>
-        </div>
-        <div class="flex-grow flex items-center justify-center">
-            <div class="w-full max-w-xl bg-white p-8 rounded-2xl shadow-2xl space-y-6">
-                <div>
-                    <label for="colectas-imperadas-input" class="block text-lg font-medium mb-2">Colectas Imperadas</label>
-                    <input type="text" inputmode="numeric" id="colectas-imperadas-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                </div>
-                 <div>
-                    <label for="colectas-imperadas-result" class="block text-lg font-medium mb-2">Resultado (50%)</label>
-                    <input type="text" id="colectas-imperadas-result" readonly class="w-full p-4 border border-gray-300 rounded-lg bg-gray-200 text-2xl font-bold text-green-600">
-                </div>
-                 <div>
-                    <label for="colectas-parroquia-input" class="block text-lg font-medium mb-2">Colectas Parroquia</label>
-                    <input type="text" inputmode="numeric" id="colectas-parroquia-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                </div>
-                 <div class="pt-4 border-t-2 border-slate-300">
-                    <label for="colectas-total" class="block text-xl font-bold mb-2">TOTAL</label>
-                    <input type="text" id="colectas-total" readonly class="w-full p-4 border border-gray-300 rounded-lg bg-gray-200 text-3xl font-extrabold text-blue-600">
-                </div>
-            </div>
-        </div>
+          <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-300">
+              <h2 class="text-3xl font-bold">Calculadora de Colectas</h2>
+              <div class="flex items-center gap-4">
+                  <button id="back-from-colectas-calculator-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition-all">Volver</button>
+              </div>
+          </div>
+          <div class="flex-grow flex items-center justify-center">
+              <div class="w-full max-w-xl bg-white p-8 rounded-2xl shadow-2xl space-y-6">
+                  <div>
+                      <label for="colectas-imperadas-input" class="block text-lg font-medium mb-2">Colectas Imperadas</label>
+                      <input type="text" inputmode="numeric" id="colectas-imperadas-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                  </div>
+                   <div>
+                      <label for="colectas-imperadas-result" class="block text-lg font-medium mb-2">Resultado (50%)</label>
+                      <input type="text" id="colectas-imperadas-result" readonly class="w-full p-4 border border-gray-300 rounded-lg bg-gray-200 text-2xl font-bold text-green-600">
+                  </div>
+                   <div>
+                      <label for="colectas-parroquia-input" class="block text-lg font-medium mb-2">Colectas Parroquia</label>
+                      <input type="text" inputmode="numeric" id="colectas-parroquia-input" placeholder="Ingrese importe..." class="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                  </div>
+                   <div class="pt-4 border-t-2 border-slate-300">
+                      <label for="colectas-total" class="block text-xl font-bold mb-2">TOTAL</label>
+                      <input type="text" id="colectas-total" readonly class="w-full p-4 border border-gray-300 rounded-lg bg-gray-200 text-3xl font-extrabold text-blue-600">
+                  </div>
+              </div>
+          </div>
     </section>
 
     <!-- MODALS (with unified design) -->
@@ -583,20 +538,17 @@
                 isAuthenticated: false,
                 currentView: 'main-view',
                 generalTransactions: [],
-                bancoTransactions: [],
                 envioColectas: [],
                 reminders: [],
                 aportes: null,
                 categories: {
                     general: { ingreso: [], egreso: [] },
-                    banco: { ingreso: [], egreso: [] }
                 },
                 currentTransactions: [],
                 pendingAction: null,
                 isLoading: true,
                 currentBlock: null,
                 generalCurrentPage: 1,
-                bancoCurrentPage: 1,
                 recordsPerPage: 3,
                 currentEditDay: { date: null, block: null },
                 summaryChartInstance: null,
@@ -640,7 +592,6 @@
                     balanceView: document.getElementById('balance-view'),
                     categoryManagementView: document.getElementById('category-management-view'),
                     remindersManagementView: document.getElementById('reminders-management-view'),
-                    colectasOnlineView: document.getElementById('colectas-online-view'),
                     aportesContainer: document.getElementById('aportes-container'),
                     envioColectasList: document.getElementById('envio-colectas-list'),
                     envioSubtotal: document.getElementById('envio-subtotal'),
@@ -649,7 +600,6 @@
                     balanceBtn: document.getElementById('balance-btn'),
                     manageCategoriesBtn: document.getElementById('manage-categories-btn'),
                     manageRemindersBtn: document.getElementById('manage-reminders-btn'),
-                    colectasOnlineBtn: document.getElementById('colectas-online-btn'),
                     backToPanelBtn: document.getElementById('back-to-panel-btn'),
                     backFromEnviosBtn: document.getElementById('back-from-envios-btn'),
                     backFromAportesBtn: document.getElementById('back-from-aportes-btn'),
@@ -659,7 +609,6 @@
                     backFromEditDayBtn: document.getElementById('back-from-edit-day-btn'),
                     backFromCategoriesBtn: document.getElementById('back-from-categories-btn'),
                     backFromRemindersBtn: document.getElementById('back-from-reminders-btn'),
-                    backFromColectasOnlineBtn: document.getElementById('back-from-colectas-online-btn'),
                     backFromBalanceFilterBtn: document.getElementById('back-from-balance-filter-btn'),
                     datePromptTitle: document.getElementById('date-prompt-title'),
                     entryDateInput: document.getElementById('entry-date-input'),
@@ -679,9 +628,7 @@
                     saveAllBtn: document.getElementById('save-all-btn'),
                     addedTransactionsList: document.getElementById('added-transactions-list'),
                     historyGeneralContainer: document.getElementById('history-general-container'),
-                    historyBancoContainer: document.getElementById('history-banco-container'),
                     searchGeneralInput: document.getElementById('search-general-input'),
-                    searchBancoInput: document.getElementById('search-banco-input'),
                     startDateFilter: document.getElementById('start-date-filter'),
                     endDateFilter: document.getElementById('end-date-filter'),
                     downloadRangePdfBtn: document.getElementById('download-range-pdf-btn'),
@@ -717,12 +664,8 @@
                     remindersList: document.getElementById('reminders-list'),
                     categoryGeneralIngresoContainer: document.getElementById('category-general-ingreso-container'),
                     categoryGeneralEgresoContainer: document.getElementById('category-general-egreso-container'),
-                    categoryBancoIngresoContainer: document.getElementById('category-banco-ingreso-container'),
-                    categoryBancoEgresoContainer: document.getElementById('category-banco-egreso-container'),
                     notificationTickerContainer: document.getElementById('notification-ticker-container'),
                     notificationTicker: document.getElementById('notification-ticker'),
-
-                    // New elements for Colectas Calculator
                     colectasCalculatorView: document.getElementById('colectas-calculator-view'),
                     colectasCalculatorBtn: document.getElementById('colectas-calculator-btn'),
                     backFromColectasCalculatorBtn: document.getElementById('back-from-colectas-calculator-btn'),
@@ -782,7 +725,6 @@
                         this.dom.appContainer.classList.add('hidden');
                         this.dom.loginView.classList.remove('hidden');
                         this.state.generalTransactions = [];
-                        this.state.bancoTransactions = [];
                     }
                 });
             },
@@ -796,7 +738,6 @@
                     await this.checkAndSeedAportesData();
 
                     this.listenToTransactions('general');
-                    this.listenToTransactions('banco');
                     this.listenToEnvioColectas();
                     this.listenToAportesData();
                     this.listenToCategories();
@@ -847,9 +788,6 @@
                 this.dom.balanceBtn.addEventListener('click', this.showBalanceView);
                 this.dom.manageCategoriesBtn.addEventListener('click', this.showCategoryManagementView);
                 this.dom.manageRemindersBtn.addEventListener('click', this.showRemindersManagementView);
-                this.dom.colectasOnlineBtn.addEventListener('click', this.showColectasOnlineView);
-                this.dom.backFromColectasOnlineBtn.addEventListener('click', this.hideColectasOnlineView);
-                this.dom.backFromBalanceFilterBtn.addEventListener('click', this.showMainView);
                 
                 [this.dom.backFromEnviosBtn, this.dom.backFromAportesBtn, this.dom.backFromBalanceBtn, this.dom.backFromFormBtn, this.dom.backFromDatePromptBtn, this.dom.backFromEditDayBtn, this.dom.backFromCategoriesBtn, this.dom.backFromRemindersBtn].forEach(btn => {
                     btn.addEventListener('click', this.showMainView);
@@ -878,7 +816,6 @@
                 this.dom.saveAllBtn.addEventListener('click', this.handleSaveAll);
 
                 this.dom.searchGeneralInput.addEventListener('input', () => { this.state.generalCurrentPage = 1; this.renderHistory('general'); });
-                this.dom.searchBancoInput.addEventListener('input', () => { this.state.bancoCurrentPage = 1; this.renderHistory('banco'); });
 
                 this.dom.modalCloseBtn.addEventListener('click', this.hideModal);
                 this.dom.genericModal.addEventListener('click', (e) => {
@@ -1109,7 +1046,7 @@
             },
             
             listenToTransactions(block) {
-                const collectionName = block === 'general' ? 'gestion_general' : 'gestion_banco';
+                const collectionName = 'gestion_general';
                 const collRef = this.getCollectionRef(collectionName);
                 if (!collRef) return;
 
@@ -1117,11 +1054,7 @@
                     let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     data.sort((a, b) => b.fecha.localeCompare(a.fecha));
                     
-                    if (block === 'general') {
-                        this.state.generalTransactions = data;
-                    } else {
-                        this.state.bancoTransactions = data;
-                    }
+                    this.state.generalTransactions = data;
                     if(this.state.currentView === 'main-view') {
                         this.renderHistory(block);
                     }
@@ -1138,7 +1071,7 @@
                 try {
                     const batch = writeBatch(this.state.db);
                     for (const trans of this.state.currentTransactions) {
-                        const collectionRef = this.getCollectionRef(trans.block === 'general' ? 'gestion_general' : 'gestion_banco');
+                        const collectionRef = this.getCollectionRef('gestion_general');
                         if (!collectionRef) throw new Error("Collection reference is null");
                         const newDocRef = doc(collectionRef);
                         const data = { ...trans };
@@ -1161,7 +1094,7 @@
             async deleteDate(dateString, block) {
                 this.toggleLoader(true);
                 try {
-                    const collectionRef = this.getCollectionRef(block === 'general' ? 'gestion_general' : 'gestion_banco');
+                    const collectionRef = this.getCollectionRef('gestion_general');
                     if (!collectionRef) throw new Error("Collection reference is null");
                     const q = query(collectionRef, where("fecha", "==", dateString));
                     const snapshot = await getDocs(q);
@@ -1203,7 +1136,7 @@
 
             // --- UI RENDERING ---
             renderHistory(block) {
-                const container = block === 'general' ? this.dom.historyGeneralContainer : this.dom.historyBancoContainer;
+                const container = this.dom.historyGeneralContainer;
                 
                 // Show skeleton loader
                 container.innerHTML = `
@@ -1216,9 +1149,9 @@
 
                 // Use a small timeout to allow the DOM to update with the skeleton before processing
                 setTimeout(() => {
-                    let currentPage = block === 'general' ? this.state.generalCurrentPage : this.state.bancoCurrentPage;
-                    const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
-                    const searchInput = block === 'general' ? this.dom.searchGeneralInput : this.dom.searchBancoInput;
+                    let currentPage = this.state.generalCurrentPage;
+                    const transactions = this.state.generalTransactions;
+                    const searchInput = this.dom.searchGeneralInput;
                     
                     container.innerHTML = ''; // Clear skeleton
                     const searchTerm = searchInput.value;
@@ -1338,10 +1271,9 @@
                 localStorage.setItem('currentParishView', viewId);
                 
                 // Hide all fullscreen overlays first
-                this.dom.colectasOnlineView.classList.add('hidden');
                 this.dom.colectasCalculatorView.classList.add('hidden');
 
-                if (viewId === 'colectas-online-view' || viewId === 'colectas-calculator-view') {
+                if (viewId === 'colectas-calculator-view') {
                     document.getElementById(viewId).classList.remove('hidden');
                     return;
                 }
@@ -1370,7 +1302,6 @@
                 this.state.currentTransactions = [];
                 this.state.currentBlock = null;
                 this.renderHistory('general');
-                this.renderHistory('banco');
             },
 
             // --- MODAL LOGIC ---
@@ -1443,12 +1374,8 @@
             },
             
             handlePagination(block, page) {
-                if (block === 'general') {
-                    this.state.generalCurrentPage = page;
-                } else {
-                    this.state.bancoCurrentPage = page;
-                }
-                this.renderHistory(block);
+                this.state.generalCurrentPage = page;
+                this.renderHistory('general');
             },
 
             formatCurrency(amount) {
@@ -1629,41 +1556,31 @@
 
             renderDetailedBalance(startDate, endDate) {
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
-                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
                 this.dom.balanceDetailsContainer.innerHTML = ''; 
 
-                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                if (generalInRange.length === 0) {
                     this.dom.balanceDetailsContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros detallados en el rango seleccionado.</p>';
                     return;
                 }
 
                 const balanceData = {
                     general: { ingresos: 0, egresos: 0, transacciones: generalInRange },
-                    banco: { ingresos: 0, egresos: 0, transacciones: bancoInRange },
                 };
 
                 generalInRange.forEach(t => {
                     if (t.type === 'ingreso') balanceData.general.ingresos += t.monto;
                     else balanceData.general.egresos += t.monto;
                 });
-
-                bancoInRange.forEach(t => {
-                    if (t.type === 'ingreso') balanceData.banco.ingresos += t.monto;
-                    else balanceData.banco.egresos += t.monto;
-                });
                 
-                const totalIngresos = balanceData.general.ingresos + balanceData.banco.ingresos;
-                const totalEgresos = balanceData.general.egresos + balanceData.banco.egresos;
+                const totalIngresos = balanceData.general.ingresos;
+                const totalEgresos = balanceData.general.egresos;
                 const saldoFinal = totalIngresos - totalEgresos;
 
                 let html = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="grid grid-cols-1 gap-8">
                         <div>
                             ${this.renderBalanceTable('Ingresos y Egresos Generales (Detallado)', balanceData.general.transacciones, balanceData.general.ingresos, balanceData.general.egresos)}
-                        </div>
-                        <div>
-                            ${this.renderBalanceTable('Movimientos de Banco (Detallado)', balanceData.banco.transacciones, balanceData.banco.ingresos, balanceData.banco.egresos)}
                         </div>
                     </div>
                     <div class="mt-8 pt-6 border-t-2 border-gray-300 text-right font-bold text-xl">
@@ -1722,7 +1639,7 @@
                 const block = this.state.currentBlock;
                 this.switchView('data-entry-view');
                 
-                const title = block === 'general' ? 'Ingresos y Egresos Generales' : 'Banco';
+                const title = 'Ingresos y Egresos Generales';
                 this.dom.dataEntryTitle.textContent = `Cargar Datos para: ${title}`;
                 this.dom.sharedDate.value = date;
                 this.state.currentTransactions = [];
@@ -1748,19 +1665,13 @@
             showDatePromptView(block) {
                 this.state.currentBlock = block;
                 this.switchView('date-prompt-view');
-                const title = block === 'general' ? 'Ingresos y Egresos Generales' : 'Banco';
+                const title = 'Ingresos y Egresos Generales';
                 this.dom.datePromptTitle.textContent = `Fecha para: ${title}`;
                 const today = new Date();
                 const year = today.getFullYear();
                 const month = String(today.getMonth() + 1).padStart(2, '0');
                 const day = String(today.getDate()).padStart(2, '0');
                 this.dom.entryDateInput.value = `${year}-${month}-${day}`;
-            },
-            showColectasOnlineView() {
-                this.switchView('colectas-online-view');
-            },
-            hideColectasOnlineView() {
-                this.showMainView();
             },
             showColectasCalculatorView() {
                 this.switchView('colectas-calculator-view');
@@ -1777,11 +1688,10 @@
                 }
 
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
-                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
                 
                 this.dom.rangeResultsContainer.innerHTML = ''; // Clear previous results
 
-                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                if (generalInRange.length === 0) {
                     this.dom.rangeResultsContainer.innerHTML = '<p class="text-center text-gray-500">No se encontraron registros en el rango seleccionado.</p>';
                     this.dom.rangeResultsContainer.classList.remove('hidden');
                     return;
@@ -1791,20 +1701,16 @@
                     this.renderRangeTable(this.dom.rangeResultsContainer, 'Resultados: Ingresos y Egresos Generales', generalInRange);
                 }
 
-                if (bancoInRange.length > 0) {
-                    this.renderRangeTable(this.dom.rangeResultsContainer, 'Resultados: Movimientos de Banco', bancoInRange);
-                }
-
                 this.dom.rangeResultsContainer.classList.remove('hidden');
             },
             showEditDayView(date, block) {
                 this.state.currentEditDay = { date, block };
                 this.switchView('edit-day-view');
 
-                const blockTitle = block === 'general' ? 'Generales' : 'Banco';
+                const blockTitle = 'Generales';
                 this.dom.editDayTitle.textContent = `Editando Registros de ${blockTitle} - ${this.formatDate(date)}`;
 
-                const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
+                const transactions = this.state.generalTransactions;
                 const dayTransactions = transactions.filter(t => t.fecha === date);
                 
                 this.dom.editDayList.innerHTML = '';
@@ -1831,7 +1737,7 @@
                 });
             },
             showEditTransactionModal(id, block) {
-                const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
+                const transactions = this.state.generalTransactions;
                 const transaction = transactions.find(t => t.id === id);
 
                 if (!transaction) {
@@ -1865,8 +1771,8 @@
                         </form>
                     `,
                     buttons: [
-                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
-                         { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                             { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                             { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
                 
@@ -1978,8 +1884,8 @@
                         </form>
                     `,
                     buttons: [
-                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
-                         { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                             { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                             { text: 'Guardar', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
                 const montoInput = document.getElementById('edit-colecta-monto');
@@ -1994,7 +1900,9 @@
 
                 this.toggleLoader(true);
                 try {
-                    const docRef = doc(this.getCollectionRef("envio_colectas"), id);
+                    const collRef = this.getCollectionRef("envio_colectas");
+                    if (!collRef) throw new Error("Collection reference is null");
+                    const docRef = doc(collRef, id);
                     await updateDoc(docRef, { fecha, descripcion, monto });
                     this.hideModal();
                     this.showToast("Colecta actualizada.", "success");
@@ -2063,7 +1971,7 @@
 
                 this.toggleLoader(true);
                 try {
-                    const collRef = this.getCollectionRef(block === 'general' ? 'gestion_general' : 'gestion_banco');
+                    const collRef = this.getCollectionRef('gestion_general');
                     const docRef = doc(collRef, id);
                     await updateDoc(docRef, { categoria, descripcion, monto });
                     
@@ -2093,13 +2001,13 @@
             async deleteSingleTransaction(id, block) {
                 this.toggleLoader(true);
                 try {
-                    const collRef = this.getCollectionRef(block === 'general' ? 'gestion_general' : 'gestion_banco');
+                    const collRef = this.getCollectionRef('gestion_general');
                     const docRef = doc(collRef, id);
                     await deleteDoc(docRef);
 
                     this.showToast("Transacción eliminada.", "success");
 
-                    const transactions = block === 'general' ? this.state.generalTransactions : this.state.bancoTransactions;
+                    const transactions = this.state.generalTransactions;
                     const remaining = transactions.filter(t => t.fecha === this.state.currentEditDay.date && t.id !== id);
                     if (remaining.length > 0) {
                         this.showEditDayView(this.state.currentEditDay.date, this.state.currentEditDay.block);
@@ -2141,8 +2049,8 @@
                         </form>
                     `,
                     buttons: [
-                         { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
-                         { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
+                             { text: 'Cancelar', class: 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg transition-all', action: this.hideModal },
+                             { text: 'Guardar Cambios', class: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all', action: () => { this.state.pendingAction(); } }
                     ]
                 });
                 const montoInput = document.getElementById('edit-temp-monto');
@@ -2199,9 +2107,8 @@
                     return;
                 }
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
-                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
 
-                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                if (generalInRange.length === 0) {
                     this.showToast("No hay datos para generar el PDF detallado.", "error");
                     return;
                 }
@@ -2210,31 +2117,17 @@
                 const doc = new jsPDF();
 
                 doc.setFontSize(18);
-                doc.text("Balance Completo Detallado", 14, 22);
+                doc.text("Balance Detallado", 14, 22);
                 doc.setFontSize(11);
                 doc.setTextColor(100);
                 doc.text(`Período: ${this.formatDate(startDate)} al ${this.formatDate(endDate)}`, 14, 30);
 
                 let totalIngresosGeneral = 0;
                 let totalEgresosGeneral = 0;
-                let totalIngresosBanco = 0;
-                let totalEgresosBanco = 0;
 
                 const generalBody = generalInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
                     if(t.type === 'ingreso') totalIngresosGeneral += t.monto;
                     else totalEgresosGeneral += t.monto;
-                    return [
-                        this.formatDate(t.fecha),
-                        t.categoria,
-                        t.descripcion || '',
-                        t.type === 'ingreso' ? this.formatCurrency(t.monto) : '',
-                        t.type === 'egreso' ? this.formatCurrency(t.monto) : ''
-                    ];
-                });
-
-                const bancoBody = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => {
-                    if(t.type === 'ingreso') totalIngresosBanco += t.monto;
-                    else totalEgresosBanco += t.monto;
                     return [
                         this.formatDate(t.fecha),
                         t.categoria,
@@ -2258,24 +2151,9 @@
                     });
                 }
 
-                if (bancoInRange.length > 0) {
-                    const startY = doc.autoTable.previous ? doc.autoTable.previous.finalY + 15 : 40;
-                    doc.setFontSize(14);
-                    doc.text("Movimientos de Banco", 14, startY - 5);
-                    doc.autoTable({
-                        startY: startY,
-                        head: [['Fecha', 'Categoría', 'Descripción', 'Ingreso', 'Egreso']],
-                        body: bancoBody,
-                        foot: [['', '', 'Subtotales', this.formatCurrency(totalIngresosBanco), this.formatCurrency(totalEgresosBanco)]],
-                        theme: 'grid',
-                        headStyles: { fillColor: [22, 163, 74] }, // green-600
-                        footStyles: { fillColor: [209, 213, 219], textColor: [0,0,0], fontStyle: 'bold' },
-                    });
-                }
-
                 const finalY = doc.autoTable.previous.finalY + 15;
-                const totalIngresos = totalIngresosGeneral + totalIngresosBanco;
-                const totalEgresos = totalEgresosGeneral + totalEgresosBanco;
+                const totalIngresos = totalIngresosGeneral;
+                const totalEgresos = totalEgresosGeneral;
                 const saldoFinal = totalIngresos - totalEgresos;
 
                 doc.setFontSize(12);
@@ -2294,9 +2172,8 @@
                     return;
                 }
                 const generalInRange = this.state.generalTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
-                const bancoInRange = this.state.bancoTransactions.filter(t => t.fecha >= startDate && t.fecha <= endDate);
 
-                if (generalInRange.length === 0 && bancoInRange.length === 0) {
+                if (generalInRange.length === 0) {
                     this.showToast("No hay datos para generar el Excel detallado.", "error");
                     return;
                 }
@@ -2313,18 +2190,6 @@
                     }));
                     const generalSheet = XLSX.utils.json_to_sheet(generalData);
                     XLSX.utils.book_append_sheet(workbook, generalSheet, 'General');
-                }
-
-                if (bancoInRange.length > 0) {
-                    const bancoData = bancoInRange.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(t => ({
-                        Fecha: this.formatDate(t.fecha),
-                        Categoría: t.categoria,
-                        Descripción: t.descripcion || '',
-                        Ingreso: t.type === 'ingreso' ? t.monto : '',
-                        Egreso: t.type === 'egreso' ? t.monto : ''
-                    }));
-                    const bancoSheet = XLSX.utils.json_to_sheet(bancoData);
-                    XLSX.utils.book_append_sheet(workbook, bancoSheet, 'Banco');
                 }
 
                 XLSX.writeFile(workbook, `Balance_Detallado_${startDate}_${endDate}.xlsx`);
@@ -2439,10 +2304,6 @@
                             ingreso: ["COLECTAS IMPERADAS", "COLECTAS PARROQUIA", "DONACIONES", "BENEFICIOS", "ESTIPENDOS", "OTRO"],
                             egreso: ["DEUDA OBISPADO", "SUELDO CAMILA", "SUELDO JULIO", "CARGAS SOCIALES EMPLEADOS", "ASIGNACION P.ADAN", "ASIGNACION P.JORGE", "MUTUAL DE LOS SACERDOTES", "COMBUSTIBLE", "LITURGIA", "EMPLEADA DE LA CASA PARROQUIAL", "SEGUROS DE LOS AUTOS", "APORTE PARA SEMINARIO", "MANTEMIENTO VEHICULOS", "MANTENIMIENTO DE LA CASA", "COMESTIBLE CASA PARROQUIAL", "SERVICIOS DE INTERNET", "OTRO"]
                         },
-                        banco: {
-                            ingreso: ["DEPOSITO CAPILLA BONPLAND", "DEPOSITO DE COLECTAS", "OTRO"],
-                            egreso: ["DEBITO AUTOMATICO", "EXTRACCION", "OTRO"]
-                        }
                     };
                     const batch = writeBatch(this.state.db);
                     for (const block in defaultCategories) {
@@ -2462,11 +2323,12 @@
                 onSnapshot(collRef, (snapshot) => {
                     const loadedCategories = {
                         general: { ingreso: [], egreso: [] },
-                        banco: { ingreso: [], egreso: [] }
                     };
                     snapshot.docs.forEach(doc => {
                         const data = doc.data();
-                        loadedCategories[data.block][data.type].push({ id: doc.id, ...data });
+                        if (loadedCategories[data.block] && loadedCategories[data.block][data.type]) {
+                            loadedCategories[data.block][data.type].push({ id: doc.id, ...data });
+                        }
                     });
                     for (const block in loadedCategories) {
                         for (const type in loadedCategories[block]) {
@@ -2486,8 +2348,6 @@
             renderCategoryLists() {
                 this.dom.categoryGeneralIngresoContainer.innerHTML = this.createCategorySectionHTML('general', 'ingreso', 'Ingresos', 'green');
                 this.dom.categoryGeneralEgresoContainer.innerHTML = this.createCategorySectionHTML('general', 'egreso', 'Egresos', 'red');
-                this.dom.categoryBancoIngresoContainer.innerHTML = this.createCategorySectionHTML('banco', 'ingreso', 'Ingresos', 'green');
-                this.dom.categoryBancoEgresoContainer.innerHTML = this.createCategorySectionHTML('banco', 'egreso', 'Egresos', 'red');
             },
             createCategorySectionHTML(block, type, title, color) {
                 const categories = this.state.categories[block][type];
